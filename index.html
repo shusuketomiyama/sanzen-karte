@@ -80,6 +80,11 @@ input:focus,textarea:focus,select:focus{outline:3px solid var(--pri-l);border-co
 .slot.empty{display:flex;align-items:center;justify-content:center;height:56px;border:2px dashed #dcc8be;border-radius:12px;color:var(--pri-d);font-weight:600;background:#fffaf7;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .slot.empty:active{background:var(--pri-l)}
 .slot input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pick label{position:relative;display:flex;align-items:center;justify-content:center;height:52px;border:2px dashed #dcc8be;border-radius:12px;color:var(--pri-d);font-weight:600;font-size:15px;background:#fffaf7;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.pick label:active{background:var(--pri-l)}
+.lgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.lg img{display:block;width:100%;border-radius:8px;border:1px solid var(--line)}.lg select{margin:6px 0 4px;font-size:14px;padding:8px 10px;min-height:40px}
 .sbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.sbtns label.btn{position:relative}
 .pimg{position:relative;margin:0 auto;background:#f1e9e4;border-radius:10px;overflow:hidden}
 .pimg img{display:block;width:100%;height:100%}
@@ -451,21 +456,28 @@ function viewVisitForm(id,vid){header('home');const c=cust(id);if(!c)return view
   ${fl.length?`<div class="kwarn">⚠ ${fl.map(esc).join('　／　')}</div>`:''}
   ${prev?`<div class="kprev"><b>前回（${fmt(prev.date)}）</b>　${esc(trunc(noteOf(prev).replace(/\n/g,' '),90))}</div>`:''}</div>
  <div class="card"><div class="sec">姿勢の写真</div><p class="sub" style="margin-top:-8px">枠をタップすると撮影できます。撮影後に「📐 ライン」でポイントを置くと、ゆがみのラインと角度が出ます。<br>iPadはできるだけ垂直に構えて撮影してください（角度は写真の水平・垂直が基準です）。</p>
-  <div id="posture"></div>${legacy.length?`<div class="vrow"><div class="vlabel">その他の写真</div><div class="thumbs">${legacy.map(p=>`<img src="${p}" alt="">`).join('')}</div></div>`:''}</div>
+  <div id="posture"></div></div>
  <div class="card"><div class="sec">メモ</div><textarea name="note" class="bignote" placeholder="施術内容、お体の状態、お話したことなどを自由に">${esc(noteOf(v))}</textarea></div>
  <div class="sticky-save"><button class="btn pri big" type="submit">保存する</button></div>
  ${ex?'<div style="margin-top:20px"><button class="btn danger" type="button" id="delv">このカルテを削除</button></div>':''}</form>`;
  return{html,mount(){const fm=$('#fm'),box=$('#posture');
-  const shot=(k,label)=>`<input type="file" accept="image/*" capture="environment" data-shot="${k}">${label}`;
-  const slot=(view,w,ph)=>{const k=view+'|'+w.k;return ph?`<div class="slot"><div class="slbl">${w.l}</div>${photoBox(ph,view)}<div class="sbtns"><button type="button" class="btn sm pri" data-mark="${k}">📐 ライン</button><label class="btn sm">${shot(k,'撮り直す')}</label><button type="button" class="btn sm danger" data-rm="${k}">削除</button></div></div>`
-   :`<label class="slot empty">${shot(k,`<span>📷 ${w.l}</span>`)}</label>`};
-  const draw=()=>{box.innerHTML=VIEWS.map(vw=>{const s=posture[vw.k]||{};return`<div class="vrow"><div class="vlabel">${vw.l}</div><div class="vpair">${WHEN.map(w=>slot(vw.k,w,s[w.k])).join('')}</div>${compareHTML(vw.k,s.before,s.after)}</div>`}).join('')};draw();
+  const cam=(k,label)=>`<input type="file" accept="image/*" capture="environment" data-shot="${k}">${label}`;
+  const lib=(k,label)=>`<input type="file" accept="image/*" data-shot="${k}">${label}`;
+  const slot=(view,w,ph)=>{const k=view+'|'+w.k;return ph?`<div class="slot"><div class="slbl">${w.l}</div>${photoBox(ph,view)}<div class="sbtns"><button type="button" class="btn sm pri" data-mark="${k}">📐 ライン</button><label class="btn sm">${cam(k,'撮り直す')}</label><label class="btn sm">${lib(k,'選び直す')}</label><button type="button" class="btn sm danger" data-rm="${k}">削除</button></div></div>`
+   :`<div class="slot"><div class="slbl">${w.l}</div><div class="pick"><label>${cam(k,'📷 撮影')}</label><label>${lib(k,'🖼 写真から')}</label></div></div>`};
+  const draw=()=>{box.innerHTML=VIEWS.map(vw=>{const s=posture[vw.k]||{};return`<div class="vrow"><div class="vlabel">${vw.l}</div><div class="vpair">${WHEN.map(w=>slot(vw.k,w,s[w.k])).join('')}</div>${compareHTML(vw.k,s.before,s.after)}</div>`}).join('')
+   +(legacy.length?`<div class="vrow"><div class="vlabel">その他の写真</div><p class="sub" style="margin:0 0 8px">以前のバージョンで撮った写真です。「枠に移す」で上の各枠に入れられます。</p><div class="lgs">${legacy.map((p,i)=>`<div class="lg"><img src="${p}" alt=""><select data-move="${i}"><option value="">枠に移す…</option>${VIEWS.flatMap(vw=>WHEN.map(w=>`<option value="${vw.k}|${w.k}">${vw.l}・${w.l}${(posture[vw.k]||{})[w.k]?'（入れ替え）':''}</option>`)).join('')}</select><button type="button" class="btn sm danger" data-lrm="${i}">削除</button></div>`).join('')}</div></div>`:'')};draw();
+  const dims=src=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res({src,w:im.naturalWidth,h:im.naturalHeight});im.onerror=()=>rej(new Error('写真を読み込めませんでした'));im.src=src});
   const get=k=>{const[a,b]=k.split('|');return[a,b]};
-  box.addEventListener('change',async e=>{const inp=e.target.closest('[data-shot]');if(!inp||!inp.files[0])return;const[vw,w]=get(inp.dataset.shot);
+  box.addEventListener('change',async e=>{const mv=e.target.closest('[data-move]');
+   if(mv&&mv.value){const i=+mv.dataset.move,[vw,w]=get(mv.value);if((posture[vw]||{})[w]&&!confirm(`${VL[vw]}・${w==='before'?'施術前':'施術後'}の写真を入れ替えますか？`)){mv.value='';return}
+    try{const r=await dims(legacy[i]);posture[vw]=posture[vw]||{};posture[vw][w]=Object.assign(r,{pts:{}});legacy.splice(i,1);draw();toast('枠に移しました（保存すると確定します）')}catch(err){alert(err.message)}return}
+   const inp=e.target.closest('[data-shot]');if(!inp||!inp.files[0])return;const[vw,w]=get(inp.dataset.shot);
    try{const r=await resizeImage(inp.files[0]);posture[vw]=posture[vw]||{};posture[vw][w]=Object.assign(r,{pts:{}});draw()}catch(err){alert(err.message)}});
   box.addEventListener('click',e=>{const mk=e.target.closest('[data-mark]'),rm=e.target.closest('[data-rm]');
    if(mk){const[vw,w]=get(mk.dataset.mark),ph=posture[vw][w];openMarker(vw,w,ph,pts=>{ph.pts=pts;draw()})}
-   if(rm&&confirm('この写真を削除しますか？')){const[vw,w]=get(rm.dataset.rm);delete posture[vw][w];draw()}});
+   if(rm&&confirm('この写真を削除しますか？')){const[vw,w]=get(rm.dataset.rm);delete posture[vw][w];draw()}
+   const lr=e.target.closest('[data-lrm]');if(lr&&confirm('この写真を削除しますか？')){legacy.splice(+lr.dataset.lrm,1);draw()}});
   fm.date.onchange=()=>{const d=fm.date.value||today();$('#num').textContent=`第${num(d)}回`;$('#st').innerHTML=statusTag(c,d)};
   fm.onsubmit=async e=>{e.preventDefault();const o=Object.assign({},ex||{id:uid(),customerId:id,createdAt:new Date().toISOString()},{date:fm.date.value||today(),posture,photos:legacy,note:fm.note.value.trim()});
    await put('visits',o);toast('保存しました');location.hash='#/c/'+id};
