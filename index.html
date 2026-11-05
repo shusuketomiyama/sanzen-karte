@@ -282,6 +282,10 @@ function viewHome(){header('home');const t=today(),ym=t.slice(0,7);
   $('#list').innerHTML=list.length?list.map(({c,v})=>{const fl=flagsOf(c).length,done=v[0]&&v[0].date===t;return`<div class="ccard"><a class="cmain" href="#/c/${c.id}/today"><div class="row between"><span class="nm">${esc(c.name)} <small style="font-weight:400;font-size:14px">様</small></span>${done?'<span class="tag sage">✓ 今日記入済み</span>':fl?'<span class="tag warn">⚠ 注意 '+fl+'</span>':''}</div><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}</div><div style="margin-top:6px">${statusTag(c)}<span class="tag gray">来店 ${v.length}回</span>${v[0]?`<span class="sub">最終 ${fmt(v[0].date)}</span>`:''}</div></a><a class="crec" href="#/c/${c.id}">これまでの記録・問診票 ›</a></div>`}).join(''):`<div class="empty" style="grid-column:1/-1">${q?'見つかりませんでした':'まだお客様がいません。<br>初めてのお客様には「📋 新しいお客様（問診票を記入）」から問診票を書いていただくと、ここに追加されます。'}</div>`};
   $('#q').addEventListener('input',draw);draw()}}}
 
+async function deleteCustomer(id){const c=cust(id);if(!c)return;
+ const nv=visitsOf(id).length,ni=intakesOf(id).length;
+ if(!confirm(`${c.name} 様を削除します。\n問診票 ${ni}件・カルテ ${nv}件もすべて消え、元に戻せません。\nよろしいですか？`))return;
+ for(const v of visitsOf(id))await del('visits',v.id);for(const v of intakesOf(id))await del('intakes',v.id);await del('customers',id);toast('削除しました');location.hash='#/'}
 function viewCustomerForm(id){header('home');const c=id?cust(id):{};if(id&&!c)return viewMissing();
  const html=`<a class="back" href="${id?'#/c/'+id:'#/'}">← 戻る</a><div class="card"><h1>${id?'お客様情報の編集':'新しいお客様'}</h1><p class="sub">住所などは不要です。分かる範囲で入力してください。</p>
  <form id="fm"><div class="cols">
@@ -298,11 +302,11 @@ function viewCustomerForm(id){header('home');const c=id?cust(id):{};if(id&&!c)re
  <div class="row between"><button class="btn pri big" type="submit">保存する</button>${id?'<button class="btn danger" type="button" id="delc">このお客様を削除</button>':''}</div>
  </form></div>`;
  return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const o=Object.assign({},c,{id:c.id||uid(),createdAt:c.createdAt||new Date().toISOString()});['name','kana','age','contact','dueDate','birthDate','parity','deliveryType','memo'].forEach(k=>o[k]=(fd.get(k)||'').trim());await put('customers',o);toast('保存しました');location.hash='#/c/'+o.id};
-  const d=$('#delc');if(d)d.onclick=async()=>{if(!confirm(`${c.name} 様のデータ（問診票・カルテを含む）をすべて削除します。元に戻せません。よろしいですか？`))return;for(const v of visitsOf(id))await del('visits',v.id);for(const v of intakesOf(id))await del('intakes',v.id);await del('customers',id);toast('削除しました');location.hash='#/'}}}}
+  const d=$('#delc');if(d)d.onclick=()=>deleteCustomer(id)}}}
 
 function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissing();const vs=visitsOf(id),its=intakesOf(id),it=its[0];
  const html=`<a class="back" href="#/">← お客様リスト</a>
- <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><div class="row"><a class="btn sm" href="#/print/karte/${id}">🖨 カルテを出力</a><a class="btn sm" href="#/c/${id}/edit">編集</a></div></div>
+ <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><div class="row"><a class="btn sm" href="#/print/karte/${id}">🖨 カルテを出力</a><a class="btn sm" href="#/c/${id}/edit">編集</a><button class="btn sm danger" id="delc">🗑 削除</button></div></div>
  <div style="margin-top:10px">${statusTag(c)}${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}${c.dueDate?`<span class="sub">予定日 ${fmt(c.dueDate)}　</span>`:''}${c.birthDate?`<span class="sub">出産日 ${fmt(c.birthDate)}</span>`:''}</div>
  ${c.memo?`<p style="white-space:pre-wrap;margin:10px 0 0">${esc(c.memo)}</p>`:''}</div>
  ${alertBox(c)}
@@ -313,7 +317,7 @@ function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissi
   ${concernsOf(it.data).length?`<h3>お悩み（${concernsOf(it.data).length}項目）</h3>${concernsOf(it.data).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel?`<span class="sub">　つらさ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
   ${(it.data.goals||[]).length?`<h3>目指したいこと</h3>${it.data.goals.map(x=>`<span class="tag sage">${esc(x)}</span>`).join('')}`:''}
   <div class="row" style="margin-top:14px">${its.map((x,i)=>`<a class="btn sm" href="#/c/${id}/intake/${x.id}">${i===0?'全文を見る':fmt(x.date)}</a>`).join('')}</div>`:`<p class="sub">まだ問診票がありません。</p>`}</div>`;
- return{html}}
+ return{html,mount(){$('#delc').onclick=()=>deleteCustomer(id)}}}
 
 function viewIntakeStart(id){const c=id?cust(id):null;if(id&&!c)return viewMissing();document.body.classList.add('client');
  const html=`<div class="hero"><p class="sub">${esc(S.settings.shopName||'')}</p><h1>${c?esc(c.name)+' 様':'ようこそ'}<br>問診票のご記入のお願い</h1><p>お体の状態に合わせて安全に施術するため、<br>いくつかの質問にお答えください。（約3分）</p><div class="row" style="justify-content:center;margin-top:30px"><a class="btn pri big" href="${c?`#/c/${id}/intake/fill`:'#/new/fill'}">記入をはじめる</a></div><p style="margin-top:40px"><a href="${c?'#/c/'+id:'#/'}" class="sub">← スタッフ画面に戻る</a></p></div>`;return{html}}

@@ -1,6 +1,6 @@
 // オフラインでも開けるように、アプリ本体をiPadに保存しておく
 // アプリを更新したら VERSION の数字を上げる
-const VERSION = 'v4';
+const VERSION = 'v5';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
