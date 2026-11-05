@@ -52,6 +52,11 @@ input:focus,textarea:focus,select:focus{outline:3px solid var(--pri-l);border-co
 .chips span{display:inline-block;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .chips input:checked+span{background:var(--pri);border-color:var(--pri);color:#fff}
 .chips.scale{gap:6px}.chips.scale span{min-width:46px;text-align:center;padding:9px 0}
+.cgrp{font-size:14px;font-weight:700;color:var(--sub);margin:14px 0 6px}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.checks label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-size:16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.checks input{width:22px;height:22px;flex:none;accent-color:var(--pri);margin:0}
+.checks label:has(input:checked){background:var(--pri-l);border-color:var(--pri)}
 .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;background:var(--pri-l);color:var(--pri-d);font-weight:600;margin:2px 4px 2px 0}
 .tag.sage{background:var(--sage-l);color:#4d6b56}.tag.gray{background:#f0ebe7;color:var(--sub)}.tag.warn{background:var(--warn-l);color:var(--warn)}
 .ccard{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
@@ -93,20 +98,40 @@ canvas.sig{width:100%;height:180px;border:1px dashed #cdbdb4;border-radius:12px;
 /* ========== 定数（問診票の項目など） ========== */
 const SYMPTOMS=['腰痛','骨盤まわりの痛み','恥骨の痛み','股関節の痛み','お尻〜脚のしびれ（坐骨神経痛）','肩こり','首こり','背中の痛み','肋骨まわりの痛み','頭痛','手首の痛み・腱鞘炎','膝の痛み','足のつり（こむら返り）','むくみ','冷え','便秘','尿漏れ','骨盤のゆるみ・ゆがみ','腹直筋離開（お腹の割れ）','お腹のたるみ','猫背・姿勢の崩れ','疲れ・睡眠不足','気分の落ち込み・イライラ'];
 const DEFAULT_MENUS=['マタニティ整体','産後骨盤調整','全身整体','腰・骨盤ケア','肩・首ケア','腹直筋離開ケア','むくみケア','骨盤底筋トレーニング指導','ストレッチ・セルフケア指導'];
+const PRE_CONCERNS=[
+ {g:'体の痛み',items:['腰痛','背中の痛み','恥骨の痛み','股関節・お尻の痛み','お尻〜脚のしびれ（坐骨神経痛）','肋骨まわりの痛み','肩こり・首こり','頭痛','手のしびれ・こわばり','足のつり（こむら返り）']},
+ {g:'体調',items:['むくみ','冷え','便秘','頻尿','胃もたれ・胸やけ','つわり','息切れ・動悸','お腹が張りやすい','疲れやすい','眠りが浅い・寝つけない']},
+ {g:'姿勢・動作',items:['反り腰','仰向けで寝るのがつらい','寝返りがつらい','立ち上がりがつらい','長く歩けない']},
+ {g:'気持ち・出産準備',items:['出産への不安','イライラ・気分の波','体重の増え方が気になる','逆子が気になる','安産に向けて体を整えたい','産後の体型が心配']},
+];
+const POST_CONCERNS=[
+ {g:'体の痛み',items:['腰痛','骨盤まわりの痛み','恥骨の痛み','尾てい骨の痛み','股関節の痛み','肩こり・首こり','背中の痛み','手首の痛み・腱鞘炎','膝の痛み','頭痛','帝王切開の傷まわりの違和感']},
+ {g:'骨盤・体型',items:['骨盤の開き・ゆがみ','腹直筋離開（お腹の割れ）','お腹のたるみ・ぽっこり','体重が戻らない','お尻・太もものたるみ','猫背・巻き肩','O脚・X脚']},
+ {g:'骨盤底（デリケートなお悩み）',items:['尿漏れ（くしゃみ・咳・ジャンプ時）','頻尿','骨盤の重だるさ・下がる感じ','会陰の痛み','便秘・痔']},
+ {g:'育児の動作',items:['抱っこで腰・腕がつらい','授乳の姿勢で首・肩・背中がつらい','おむつ替え・寝かしつけで腰がつらい','ベビーカー・チャイルドシートの動作がつらい']},
+ {g:'体調・気持ち',items:['睡眠不足・疲れが抜けない','体力が落ちた','冷え','むくみ','抜け毛','乳房の張り・しこり','気分の落ち込み・涙もろい','イライラしやすい']},
+];
 const INTAKE=[
- {t:'今のお悩みについて',f:[
+ {t:'妊娠中のお悩みチェック',show:'pre',f:[
+  {k:'preConcerns',l:'当てはまるものにチェックしてください',hint:'いくつでも',type:'checks',o:PRE_CONCERNS},
+  {k:'preOther',l:'その他のお悩み',type:'text'},
+ ]},
+ {t:'産後のお悩みチェック',show:'post',f:[
+  {k:'postConcerns',l:'当てはまるものにチェックしてください',hint:'いくつでも',type:'checks',o:POST_CONCERNS},
+  {k:'postOther',l:'その他のお悩み',type:'text'},
+ ]},
+ {t:'今いちばんのお悩み',f:[
   {k:'mainConcern',l:'いちばん気になっていること',type:'textarea',ph:'例：抱っこをすると腰が痛くなる'},
-  {k:'symptoms',l:'当てはまる症状',hint:'いくつでも',type:'chips',o:SYMPTOMS},
   {k:'painLevel',l:'いちばんつらい症状の強さ',hint:'0＝なし ／ 10＝我慢できないほど',type:'scale'},
   {k:'since',l:'いつ頃から気になっていますか',type:'radio',o:['妊娠前から','妊娠中から','出産後から','最近']},
   {k:'worseWhen',l:'つらくなる場面',hint:'いくつでも',type:'chips',o:['朝起きたとき','立ち上がるとき','長く座ったあと','歩くとき','抱っこ・授乳のとき','寝返りのとき','夕方','特になし']},
  ]},
- {t:'妊娠中の方へ',show:'pre',f:[
+ {t:'妊娠の経過について',show:'pre',f:[
   {k:'preCourse',l:'妊娠の経過',type:'radio',o:['順調','医師から注意を受けている']},
   {k:'preCond',l:'当てはまるもの',hint:'いくつでも',type:'chips',o:['切迫早産・切迫流産','妊娠高血圧症候群','妊娠糖尿病','前置胎盤・低置胎盤','逆子','双子以上','お腹が張りやすい','出血がある','特になし']},
   {k:'posture',l:'姿勢について',type:'chips',o:['仰向けが苦しい','うつ伏せはできない','横向きが楽','特になし']},
  ]},
- {t:'産後の方へ',show:'post',f:[
+ {t:'出産・産後の経過について',show:'post',f:[
   {k:'deliveryType',l:'出産方法',type:'radio',o:['経膣分娩','無痛分娩','吸引・鉗子分娩','帝王切開']},
   {k:'birthTrouble',l:'出産時のこと',hint:'いくつでも',type:'chips',o:['会陰切開・裂傷','出血が多かった','長時間のお産','特になし']},
   {k:'checkup',l:'産後1ヶ月健診',type:'radio',o:['済・問題なし','済・指摘あり','まだ']},
@@ -173,11 +198,12 @@ function flagsOf(c){const f=[];const it=intakesOf(c.id)[0];
   if(it.phase==='pre'){(d.preCond||[]).filter(x=>x!=='特になし'&&x!=='逆子').forEach(x=>f.push(x));if(d.preCourse==='医師から注意を受けている')f.push('妊娠経過で医師から注意あり');(d.posture||[]).filter(x=>x!=='特になし'&&x!=='横向きが楽').forEach(x=>f.push(x))}
   if(it.phase==='post'){if(d.checkup==='まだ')f.push('産後1ヶ月健診がまだ');if(d.checkup==='済・指摘あり')f.push('産後健診で指摘あり');if(d.lochia==='まだ続いている')f.push('悪露が続いている')}
   if(d.doctorLimit==='はい')f.push('医師から制限あり'+(d.doctorLimitDetail?'：'+d.doctorLimitDetail:''));
-  if((d.symptoms||[]).includes('腹直筋離開（お腹の割れ）'))f.push('腹直筋離開あり');
+  const cs=concernsOf(d);if(cs.includes('腹直筋離開（お腹の割れ）'))f.push('腹直筋離開あり');if(cs.includes('帝王切開の傷まわりの違和感'))f.push('帝王切開の傷まわりに違和感あり');if(cs.includes('乳房の張り・しこり'))f.push('乳房の張り・しこり（うつ伏せ注意）');
   if(d.allergy)f.push('アレルギー：'+d.allergy);
   if(d.avoid)f.push('避けたいこと：'+d.avoid);}
  const s=statusAt(c);if(s.over)f.push('出産予定日を過ぎています（出産日の登録を）');
  return f}
+const concernsOf=d=>[...(d.preConcerns||d.postConcerns||d.symptoms||[]),...((d.preOther||d.postOther)?[d.preOther||d.postOther]:[])];
 const alertBox=c=>{const f=flagsOf(c);return f.length?`<div class="alert"><b>⚠ 施術時の注意</b><ul>${f.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''};
 
 /* ========== フォーム部品 ========== */
@@ -185,9 +211,10 @@ function fieldHTML(f,v){const lb=`<span class="lb">${esc(f.l)}${f.hint?`<span cl
  if(f.type==='text')return`<label class="f">${lb}<input type="text" name="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph||'')}"></label>`;
  if(f.type==='textarea')return`<label class="f">${lb}<textarea name="${f.k}" placeholder="${esc(f.ph||'')}">${esc(v)}</textarea></label>`;
  if(f.type==='chips'){const a=v||[];return`<div class="f">${lb}<div class="chips">${f.o.map(o=>`<label><input type="checkbox" name="${f.k}" value="${esc(o)}" ${a.includes(o)?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div></div>`}
+ if(f.type==='checks'){const a=v||[];return`<div class="f">${lb}${f.o.map(grp=>`<div class="cgrp">${esc(grp.g)}</div><div class="checks">${grp.items.map(o=>`<label><input type="checkbox" name="${f.k}" value="${esc(o)}" ${a.includes(o)?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div>`).join('')}</div>`}
  if(f.type==='radio')return`<div class="f">${lb}<div class="chips">${f.o.map(o=>`<label><input type="radio" name="${f.k}" value="${esc(o)}" ${v===o?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div></div>`;
  if(f.type==='scale')return`<div class="f">${lb}<div class="chips scale">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<label><input type="radio" name="${f.k}" value="${n}" ${String(v)===String(n)?'checked':''}><span>${n}</span></label>`).join('')}</div></div>`;}
-const readField=(fd,f)=>f.type==='chips'?fd.getAll(f.k):(fd.get(f.k)||'').trim();
+const readField=(fd,f)=>f.type==='chips'||f.type==='checks'?fd.getAll(f.k):(fd.get(f.k)||'').trim();
 function valueText(f,v){if(Array.isArray(v))return v.join('、');if(f.type==='scale'&&v!=='')return v+' / 10';return v}
 function sigPad(canvas,existing){const ctx=canvas.getContext('2d'),r=window.devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*r;canvas.height=h*r;ctx.scale(r,r);ctx.lineWidth=2.6;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#3b3330';let on=false,dirty=false;
  if(existing){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,w,h);img.src=existing;dirty=true}
@@ -248,7 +275,7 @@ function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissi
  <div class="row" style="margin-bottom:16px"><a class="btn pri big" style="flex:1" href="#/c/${id}/visit/new">＋ 今日の施術を記録</a><a class="btn big" style="flex:1" href="#/c/${id}/intake/new">📋 問診票を記入</a></div>
  <div class="card"><h2>問診票</h2>${it?`<div class="sub">最新：${fmt(it.date)}（${it.phase==='pre'?'妊娠中':'産後'}に記入）</div>
   ${it.data.mainConcern?`<h3>いちばん気になっていること</h3><div style="white-space:pre-wrap">${esc(it.data.mainConcern)}</div>`:''}
-  ${(it.data.symptoms||[]).length?`<h3>症状</h3>${it.data.symptoms.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel!==''?`<span class="sub">　強さ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
+  ${concernsOf(it.data).length?`<h3>お悩み（${concernsOf(it.data).length}項目）</h3>${concernsOf(it.data).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel!==''?`<span class="sub">　強さ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
   ${(it.data.goals||[]).length?`<h3>目指したいこと</h3>${it.data.goals.map(x=>`<span class="tag sage">${esc(x)}</span>`).join('')}`:''}
   <div class="row" style="margin-top:14px">${its.map((x,i)=>`<a class="btn sm" href="#/c/${id}/intake/${x.id}">${i===0?'全文を見る':fmt(x.date)}</a>`).join('')}</div>`:`<p class="sub">まだ問診票がありません。初回来店時に「問診票を記入」からお客様に記入していただきましょう。</p>`}</div>
  ${painChart(vs)}
