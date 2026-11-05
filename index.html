@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="産前産後カルテ">
+<meta name="theme-color" content="#f7f2ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<title>産前産後カルテ</title>
+<style>
+:root{--bg:#f7f2ee;--card:#fff;--ink:#3b3330;--sub:#8a7d77;--line:#e8ddd6;--pri:#c47a6a;--pri-d:#a35d4d;--pri-l:#f6e4de;--sage:#6f9179;--sage-l:#e4eee6;--warn:#b5482f;--warn-l:#fbe9e3;--r:16px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;font-size:17px;line-height:1.6;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(env(safe-area-inset-bottom) + 40px)}
+a{color:var(--pri-d)}
+header.top{position:sticky;top:0;z-index:10;background:rgba(247,242,238,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 10px) 20px 10px;display:flex;align-items:center;gap:8px}
+.brand{font-weight:700;font-size:19px;color:var(--pri-d);text-decoration:none;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top a.nav{color:var(--ink);text-decoration:none;padding:8px 14px;border-radius:10px;font-weight:600;font-size:15px}
+.top a.nav.on{background:var(--pri-l);color:var(--pri-d)}
+main{max-width:980px;margin:0 auto;padding:20px}
+body.client header.top{display:none}
+body.client main{max-width:820px;font-size:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px}
+h1{font-size:25px;margin:0 0 4px;line-height:1.35}h2{font-size:19px;margin:0 0 12px}h3{font-size:15px;color:var(--sub);margin:18px 0 6px;font-weight:600}
+.sub{color:var(--sub);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:16px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.sage{background:var(--sage);border-color:var(--sage);color:#fff}
+.btn.danger{color:var(--warn);border-color:#ebc6bb}
+.btn.big{min-height:60px;font-size:18px;padding:0 26px;border-radius:14px}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.btn.wide{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.f{display:block;margin-bottom:18px}
+.f>.lb{display:block;font-weight:600;font-size:15px;margin-bottom:7px}
+.hint{font-size:13px;color:var(--sub);font-weight:400;margin-left:6px}
+input[type=text],input[type=number],input[type=date],input[type=search],input[type=tel],select,textarea{width:100%;font:inherit;font-size:17px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);-webkit-appearance:none;appearance:none;min-height:48px}
+textarea{min-height:100px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:3px solid var(--pri-l);border-color:var(--pri)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{position:relative}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{display:inline-block;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.chips input:checked+span{background:var(--pri);border-color:var(--pri);color:#fff}
+.chips.scale{gap:6px}.chips.scale span{min-width:46px;text-align:center;padding:9px 0}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;background:var(--pri-l);color:var(--pri-d);font-weight:600;margin:2px 4px 2px 0}
+.tag.sage{background:var(--sage-l);color:#4d6b56}.tag.gray{background:#f0ebe7;color:var(--sub)}.tag.warn{background:var(--warn-l);color:var(--warn)}
+.ccard{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.ccard:active{background:#fdf9f7}
+.ccard .nm{font-size:19px;font-weight:700}
+.alert{background:var(--warn-l);border:1px solid #efc9bd;border-radius:var(--r);padding:14px 18px;margin-bottom:16px;color:#7d3322}
+.alert b{color:var(--warn)}
+.alert ul{margin:6px 0 0;padding-left:20px}
+.notice{background:#fff8e6;border:1px solid #f0dfae;border-radius:var(--r);padding:14px 18px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat .v{font-size:26px;font-weight:700;color:var(--pri-d)}.stat .k{font-size:13px;color:var(--sub)}
+.visit{border-top:1px solid var(--line);padding:14px 0}
+.visit:first-child{border-top:0;padding-top:0}
+.visit a{text-decoration:none;color:inherit;display:block}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:6px 16px;margin:0}
+.kv dt{color:var(--sub);font-size:14px}.kv dd{margin:0;white-space:pre-wrap}
+@media (max-width:640px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:8px}.stats{grid-template-columns:1fr 1fr 1fr}.stat .v{font-size:20px}}
+.sec{font-size:18px;font-weight:700;color:var(--pri-d);border-left:4px solid var(--pri);padding-left:10px;margin:0 0 16px}
+.phase-pre [data-show=post],.phase-post [data-show=pre]{display:none}
+canvas.sig{width:100%;height:180px;border:1px dashed #cdbdb4;border-radius:12px;background:#fffdfb;touch-action:none;display:block}
+.back{display:inline-block;margin-bottom:12px;text-decoration:none;font-weight:600}
+.empty{text-align:center;color:var(--sub);padding:40px 20px}
+.hero{text-align:center;padding:60px 20px}
+.hero h1{font-size:30px;margin-bottom:12px}
+.toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#3b3330;color:#fff;padding:12px 22px;border-radius:999px;font-weight:600;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+.chart text{font-size:11px;fill:var(--sub)}
+.sticky-save{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:10px;margin-top:10px}
+.sticky-save .btn{flex:1;box-shadow:0 4px 16px rgba(80,50,40,.12)}
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main id="app"><p class="empty">読み込み中…</p></main>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+/* ========== 定数（問診票の項目など） ========== */
+const SYMPTOMS=['腰痛','骨盤まわりの痛み','恥骨の痛み','股関節の痛み','お尻〜脚のしびれ（坐骨神経痛）','肩こり','首こり','背中の痛み','肋骨まわりの痛み','頭痛','手首の痛み・腱鞘炎','膝の痛み','足のつり（こむら返り）','むくみ','冷え','便秘','尿漏れ','骨盤のゆるみ・ゆがみ','腹直筋離開（お腹の割れ）','お腹のたるみ','猫背・姿勢の崩れ','疲れ・睡眠不足','気分の落ち込み・イライラ'];
+const DEFAULT_MENUS=['マタニティ整体','産後骨盤調整','全身整体','腰・骨盤ケア','肩・首ケア','腹直筋離開ケア','むくみケア','骨盤底筋トレーニング指導','ストレッチ・セルフケア指導'];
+const INTAKE=[
+ {t:'今のお悩みについて',f:[
+  {k:'mainConcern',l:'いちばん気になっていること',type:'textarea',ph:'例：抱っこをすると腰が痛くなる'},
+  {k:'symptoms',l:'当てはまる症状',hint:'いくつでも',type:'chips',o:SYMPTOMS},
+  {k:'painLevel',l:'いちばんつらい症状の強さ',hint:'0＝なし ／ 10＝我慢できないほど',type:'scale'},
+  {k:'since',l:'いつ頃から気になっていますか',type:'radio',o:['妊娠前から','妊娠中から','出産後から','最近']},
+  {k:'worseWhen',l:'つらくなる場面',hint:'いくつでも',type:'chips',o:['朝起きたとき','立ち上がるとき','長く座ったあと','歩くとき','抱っこ・授乳のとき','寝返りのとき','夕方','特になし']},
+ ]},
+ {t:'妊娠中の方へ',show:'pre',f:[
+  {k:'preCourse',l:'妊娠の経過',type:'radio',o:['順調','医師から注意を受けている']},
+  {k:'preCond',l:'当てはまるもの',hint:'いくつでも',type:'chips',o:['切迫早産・切迫流産','妊娠高血圧症候群','妊娠糖尿病','前置胎盤・低置胎盤','逆子','双子以上','お腹が張りやすい','出血がある','特になし']},
+  {k:'posture',l:'姿勢について',type:'chips',o:['仰向けが苦しい','うつ伏せはできない','横向きが楽','特になし']},
+ ]},
+ {t:'産後の方へ',show:'post',f:[
+  {k:'deliveryType',l:'出産方法',type:'radio',o:['経膣分娩','無痛分娩','吸引・鉗子分娩','帝王切開']},
+  {k:'birthTrouble',l:'出産時のこと',hint:'いくつでも',type:'chips',o:['会陰切開・裂傷','出血が多かった','長時間のお産','特になし']},
+  {k:'checkup',l:'産後1ヶ月健診',type:'radio',o:['済・問題なし','済・指摘あり','まだ']},
+  {k:'lochia',l:'悪露（産後の出血）',type:'radio',o:['終わっている','まだ続いている']},
+  {k:'feeding',l:'授乳',type:'radio',o:['母乳','混合','ミルク']},
+  {k:'sleep',l:'1日の睡眠時間（合計）',type:'radio',o:['3時間未満','3〜5時間','5〜7時間','7時間以上']},
+ ]},
+ {t:'体調・健康について',f:[
+  {k:'doctorLimit',l:'医師から運動や施術の制限を受けていますか',type:'radio',o:['いいえ','はい']},
+  {k:'doctorLimitDetail',l:'「はい」の方：その内容',type:'text'},
+  {k:'history',l:'持病・これまでの大きな病気やケガ',type:'textarea',ph:'例：椎間板ヘルニア（2019年）'},
+  {k:'meds',l:'服用中のお薬・サプリ',type:'text'},
+  {k:'allergy',l:'アレルギー',type:'text'},
+  {k:'experience',l:'整体・マッサージを受けたことはありますか',type:'radio',o:['ある','ない']},
+  {k:'pressure',l:'お好みの強さ',type:'radio',o:['やさしめ','ふつう','しっかり','おまかせ']},
+  {k:'avoid',l:'触れてほしくない部位・苦手なこと',type:'text'},
+ ]},
+ {t:'施術で目指したいこと',f:[
+  {k:'goals',l:'ご希望',hint:'いくつでも',type:'chips',o:['痛みをやわらげたい','骨盤を整えたい','体型を戻したい','姿勢をよくしたい','尿漏れを改善したい','安産に向けて整えたい','リラックスしたい']},
+  {k:'source',l:'当店を知ったきっかけ',type:'radio',o:['Instagram','ご紹介','検索','チラシ','その他']},
+  {k:'note',l:'その他、伝えておきたいこと',type:'textarea'},
+ ]},
+];
+const CONSENT='施術の効果には個人差があること、体調に変化があった場合はすぐにお伝えいただくこと、妊娠中・産後の体調について医師の指示を優先することに同意します。ご記入いただいた内容は施術の目的にのみ使用し、外部に提供することはありません。';
+
+/* ========== 便利関数 ========== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>ymd(new Date());
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const diffDays=(a,b)=>Math.round((parse(b)-parse(a))/86400000);
+const monthsBetween=(a,b)=>{const x=parse(a),y=parse(b);return(y.getFullYear()-x.getFullYear())*12+(y.getMonth()-x.getMonth())-(y.getDate()<x.getDate()?1:0)};
+const fmt=s=>{if(!s)return'';const d=parse(s);return`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`};
+const yen=n=>n||n===0?'¥'+Number(n).toLocaleString('ja-JP'):'';
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2000)}
+
+/* ========== 保存（iPad内のIndexedDB） ========== */
+const STORES=['customers','intakes','visits','meta'];
+let db;const S={customers:[],intakes:[],visits:[],settings:null};
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('sanzen-karte',1);r.onupgradeneeded=()=>{STORES.forEach(s=>{if(!r.result.objectStoreNames.contains(s))r.result.createObjectStore(s,{keyPath:'id'})})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function getAll(store){return new Promise((res,rej)=>{const q=db.transaction(store).objectStore(store).getAll();q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+function run(store,fn){return new Promise((res,rej)=>{const t=db.transaction(store,'readwrite');fn(t.objectStore(store));t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
+async function put(store,obj){obj.updatedAt=new Date().toISOString();await run(store,s=>s.put(obj));const a=S[store],i=a.findIndex(x=>x.id===obj.id);if(i>=0)a[i]=obj;else a.push(obj)}
+async function del(store,id){await run(store,s=>s.delete(id));S[store]=S[store].filter(x=>x.id!==id)}
+async function saveSettings(){await run('meta',s=>s.put(S.settings))}
+async function load(){db=await openDB();for(const s of['customers','intakes','visits'])S[s]=await getAll(s);
+ const meta=await getAll('meta');S.settings=meta.find(m=>m.id==='settings')||{id:'settings',shopName:'',menus:DEFAULT_MENUS,lastBackup:null};
+ if(navigator.storage&&navigator.storage.persist){try{S.persisted=await navigator.storage.persist()}catch(e){}}}
+
+/* ========== データの読み取り ========== */
+const cust=id=>S.customers.find(c=>c.id===id);
+const visitsOf=id=>S.visits.filter(v=>v.customerId===id).sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt||'').localeCompare(a.createdAt||''));
+const intakesOf=id=>S.intakes.filter(v=>v.customerId===id).sort((a,b)=>b.date.localeCompare(a.date));
+function statusAt(c,at){at=at||today();
+ if(c.birthDate&&c.birthDate<=at){const d=diffDays(c.birthDate,at);return{ph:'post',label:d<7?`産後${d}日`:d<84?`産後${Math.floor(d/7)}週`:`産後${monthsBetween(c.birthDate,at)}ヶ月`}}
+ if(c.dueDate){const ga=280-diffDays(at,c.dueDate);if(ga<0)return{ph:'pre',label:'妊娠初期'};return{ph:'pre',label:`妊娠${Math.floor(ga/7)}週${ga%7}日`,over:ga>280}}
+ return{ph:'',label:'時期未登録'}}
+function flagsOf(c){const f=[];const it=intakesOf(c.id)[0];
+ if(c.deliveryType==='帝王切開')f.push('帝王切開（お腹の傷・腹部への圧に注意）');
+ if(it){const d=it.data;
+  if(it.phase==='pre'){(d.preCond||[]).filter(x=>x!=='特になし'&&x!=='逆子').forEach(x=>f.push(x));if(d.preCourse==='医師から注意を受けている')f.push('妊娠経過で医師から注意あり');(d.posture||[]).filter(x=>x!=='特になし'&&x!=='横向きが楽').forEach(x=>f.push(x))}
+  if(it.phase==='post'){if(d.checkup==='まだ')f.push('産後1ヶ月健診がまだ');if(d.checkup==='済・指摘あり')f.push('産後健診で指摘あり');if(d.lochia==='まだ続いている')f.push('悪露が続いている')}
+  if(d.doctorLimit==='はい')f.push('医師から制限あり'+(d.doctorLimitDetail?'：'+d.doctorLimitDetail:''));
+  if((d.symptoms||[]).includes('腹直筋離開（お腹の割れ）'))f.push('腹直筋離開あり');
+  if(d.allergy)f.push('アレルギー：'+d.allergy);
+  if(d.avoid)f.push('避けたいこと：'+d.avoid);}
+ const s=statusAt(c);if(s.over)f.push('出産予定日を過ぎています（出産日の登録を）');
+ return f}
+const alertBox=c=>{const f=flagsOf(c);return f.length?`<div class="alert"><b>⚠ 施術時の注意</b><ul>${f.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''};
+
+/* ========== フォーム部品 ========== */
+function fieldHTML(f,v){const lb=`<span class="lb">${esc(f.l)}${f.hint?`<span class="hint">${esc(f.hint)}</span>`:''}</span>`;
+ if(f.type==='text')return`<label class="f">${lb}<input type="text" name="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph||'')}"></label>`;
+ if(f.type==='textarea')return`<label class="f">${lb}<textarea name="${f.k}" placeholder="${esc(f.ph||'')}">${esc(v)}</textarea></label>`;
+ if(f.type==='chips'){const a=v||[];return`<div class="f">${lb}<div class="chips">${f.o.map(o=>`<label><input type="checkbox" name="${f.k}" value="${esc(o)}" ${a.includes(o)?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div></div>`}
+ if(f.type==='radio')return`<div class="f">${lb}<div class="chips">${f.o.map(o=>`<label><input type="radio" name="${f.k}" value="${esc(o)}" ${v===o?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div></div>`;
+ if(f.type==='scale')return`<div class="f">${lb}<div class="chips scale">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<label><input type="radio" name="${f.k}" value="${n}" ${String(v)===String(n)?'checked':''}><span>${n}</span></label>`).join('')}</div></div>`;}
+const readField=(fd,f)=>f.type==='chips'?fd.getAll(f.k):(fd.get(f.k)||'').trim();
+function valueText(f,v){if(Array.isArray(v))return v.join('、');if(f.type==='scale'&&v!=='')return v+' / 10';return v}
+function sigPad(canvas,existing){const ctx=canvas.getContext('2d'),r=window.devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*r;canvas.height=h*r;ctx.scale(r,r);ctx.lineWidth=2.6;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#3b3330';let on=false,dirty=false;
+ if(existing){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,w,h);img.src=existing;dirty=true}
+ const pos=e=>{const b=canvas.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ canvas.onpointerdown=e=>{on=true;dirty=true;canvas.setPointerCapture(e.pointerId);ctx.beginPath();ctx.moveTo(...pos(e))};
+ canvas.onpointermove=e=>{if(!on)return;ctx.lineTo(...pos(e));ctx.stroke()};
+ canvas.onpointerup=canvas.onpointercancel=()=>{on=false};
+ return{clear(){ctx.clearRect(0,0,w,h);dirty=false},get(){if(!dirty)return'';const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(canvas,0,0,w,h);return c.toDataURL('image/png')}}}
+
+/* ========== 画面 ========== */
+function header(active){const name=S.settings.shopName||'産前産後カルテ';
+ $('#top').innerHTML=`<a class="brand" href="#/">${esc(name)}</a><a class="nav ${active==='home'?'on':''}" href="#/">お客様</a><a class="nav ${active==='settings'?'on':''}" href="#/settings">設定・バックアップ</a>`}
+
+function backupNotice(){if(!S.customers.length)return'';const lb=S.settings.lastBackup;const days=lb?Math.floor((Date.now()-new Date(lb))/86400000):null;
+ if(lb&&days<7)return'';return`<div class="notice row between"><div>💾 ${lb?`最後のバックアップから${days}日たっています。`:'まだバックアップがありません。'}<br><span class="sub">データはこのiPadの中だけにあります。週に1回はiCloud Driveなどに保存しましょう。</span></div><button class="btn sm" data-act="backup">今すぐバックアップ</button></div>`}
+
+function viewHome(){header('home');const t=today(),ym=t.slice(0,7);
+ const mv=S.visits.filter(v=>v.date.startsWith(ym));const sales=mv.reduce((s,v)=>s+(Number(v.price)||0),0);
+ const next=S.customers.map(c=>{const v=visitsOf(c.id)[0];return v&&v.nextDate&&v.nextDate>=t?{c,d:v.nextDate}:null}).filter(Boolean).sort((a,b)=>a.d.localeCompare(b.d));
+ const html=`${backupNotice()}
+ <div class="stats"><div class="stat"><div class="v">${S.customers.length}<small style="font-size:14px">名</small></div><div class="k">お客様</div></div><div class="stat"><div class="v">${mv.length}<small style="font-size:14px">回</small></div><div class="k">今月の施術</div></div><div class="stat"><div class="v">${yen(sales)||'¥0'}</div><div class="k">今月の売上</div></div></div>
+ ${next.length?`<div class="card"><h2>次回のご予約</h2>${next.map(x=>`<div class="row between visit"><a href="#/c/${x.c.id}"><b>${esc(x.c.name)}</b> 様</a><span>${x.d===t?'<span class="tag">今日</span>':''}${fmt(x.d)}</span></div>`).join('')}</div>`:''}
+ <div class="row between" style="margin:8px 0 12px"><h1>お客様一覧</h1><a class="btn pri" href="#/c/new">＋ 新しいお客様</a></div>
+ <input type="search" id="q" placeholder="お名前・ふりがなで検索" style="margin-bottom:14px">
+ <div id="list" class="grid2"></div>`;
+ return{html,mount(){const draw=()=>{const q=$('#q').value.trim();const list=S.customers.filter(c=>!q||(c.name+(c.kana||'')).includes(q)).map(c=>({c,v:visitsOf(c.id)})).sort((a,b)=>((b.v[0]||{}).date||b.c.createdAt||'').localeCompare((a.v[0]||{}).date||a.c.createdAt||''));
+  $('#list').innerHTML=list.length?list.map(({c,v})=>{const s=statusAt(c),fl=flagsOf(c).length;return`<a class="ccard" href="#/c/${c.id}"><div class="row between"><span class="nm">${esc(c.name)} <small style="font-weight:400;font-size:14px">様</small></span>${fl?'<span class="tag warn">⚠ 注意 '+fl+'</span>':''}</div><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}</div><div style="margin-top:6px"><span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span><span class="tag gray">来店 ${v.length}回</span>${v[0]?`<span class="sub">最終 ${fmt(v[0].date)}</span>`:''}</div></a>`}).join(''):`<div class="empty" style="grid-column:1/-1">${q?'見つかりませんでした':'まだお客様が登録されていません。<br>「＋ 新しいお客様」から登録しましょう。'}</div>`};
+  $('#q').addEventListener('input',draw);draw()}}}
+
+function viewCustomerForm(id){header('home');const c=id?cust(id):{};if(id&&!c)return viewMissing();
+ const html=`<a class="back" href="${id?'#/c/'+id:'#/'}">← 戻る</a><div class="card"><h1>${id?'お客様情報の編集':'新しいお客様'}</h1><p class="sub">住所などは不要です。分かる範囲で入力してください。</p>
+ <form id="fm"><div class="cols">
+  <label class="f"><span class="lb">お名前 *</span><input type="text" name="name" required value="${esc(c.name)}"></label>
+  <label class="f"><span class="lb">ふりがな</span><input type="text" name="kana" value="${esc(c.kana)}"></label>
+  <label class="f"><span class="lb">年齢</span><input type="number" inputmode="numeric" name="age" min="10" max="70" value="${esc(c.age)}"></label>
+  <label class="f"><span class="lb">連絡先<span class="hint">LINE名・電話など（任意）</span></span><input type="text" name="contact" value="${esc(c.contact)}"></label>
+  <label class="f"><span class="lb">出産予定日<span class="hint">妊娠中の方</span></span><input type="date" name="dueDate" value="${esc(c.dueDate)}"></label>
+  <label class="f"><span class="lb">出産日<span class="hint">ご出産後に入力</span></span><input type="date" name="birthDate" value="${esc(c.birthDate)}"></label>
+ </div>
+ ${fieldHTML({k:'parity',l:'出産経験',type:'radio',o:['初めて','2人目','3人目以上']},c.parity)}
+ ${fieldHTML({k:'deliveryType',l:'出産方法',hint:'ご出産後の方',type:'radio',o:['経膣分娩','無痛分娩','吸引・鉗子分娩','帝王切開']},c.deliveryType)}
+ <label class="f"><span class="lb">メモ</span><textarea name="memo" placeholder="お子さんの名前、来店時の様子など">${esc(c.memo)}</textarea></label>
+ <div class="row between"><button class="btn pri big" type="submit">保存する</button>${id?'<button class="btn danger" type="button" id="delc">このお客様を削除</button>':''}</div>
+ </form></div>`;
+ return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const o=Object.assign({},c,{id:c.id||uid(),createdAt:c.createdAt||new Date().toISOString()});['name','kana','age','contact','dueDate','birthDate','parity','deliveryType','memo'].forEach(k=>o[k]=(fd.get(k)||'').trim());await put('customers',o);toast('保存しました');location.hash='#/c/'+o.id};
+  const d=$('#delc');if(d)d.onclick=async()=>{if(!confirm(`${c.name} 様のデータ（問診票・カルテを含む）をすべて削除します。元に戻せません。よろしいですか？`))return;for(const v of visitsOf(id))await del('visits',v.id);for(const v of intakesOf(id))await del('intakes',v.id);await del('customers',id);toast('削除しました');location.hash='#/'}}}}
+
+function painChart(vs){const pts=vs.filter(v=>v.painBefore!==''||v.painAfter!=='').slice().reverse();if(pts.length<2)return'';const W=640,H=150,L=28,R=10,T=10,B=24,n=pts.length,x=i=>L+(W-L-R)*i/(n-1),y=v=>T+(H-T-B)*(1-v/10);
+ const line=(k,col,dash)=>{const p=pts.map((v,i)=>v[k]===''||v[k]==null?null:[x(i),y(+v[k])]).filter(Boolean);return p.length?`<polyline fill="none" stroke="${col}" stroke-width="2.5" ${dash?'stroke-dasharray="5 4"':''} points="${p.map(q=>q.join(',')).join(' ')}"/>${p.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${col}"/>`).join('')}`:''};
+ return`<div class="card"><div class="row between"><h2 style="margin:0">痛みの変化</h2><span class="sub"><span style="color:var(--pri)">━</span> 施術前　<span style="color:var(--sage)">┅</span> 施術後</span></div><svg class="chart" viewBox="0 0 ${W} ${H}" width="100%">${[0,5,10].map(g=>`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="#eee4de"/><text x="4" y="${y(g)+4}">${g}</text>`).join('')}${pts.map((v,i)=>i===0||i===n-1||n<=8?`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${v.date.slice(5).replace('-','/')}</text>`:'').join('')}${line('painBefore','#c47a6a')}${line('painAfter','#6f9179',1)}</svg></div>`}
+
+function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissing();const s=statusAt(c),vs=visitsOf(id),its=intakesOf(id),it=its[0];
+ const html=`<a class="back" href="#/">← お客様一覧</a>
+ <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><a class="btn sm" href="#/c/${id}/edit">編集</a></div>
+ <div style="margin-top:10px"><span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span>${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}${c.dueDate?`<span class="sub">予定日 ${fmt(c.dueDate)}　</span>`:''}${c.birthDate?`<span class="sub">出産日 ${fmt(c.birthDate)}</span>`:''}</div>
+ ${c.memo?`<p style="white-space:pre-wrap;margin:10px 0 0">${esc(c.memo)}</p>`:''}</div>
+ ${alertBox(c)}
+ <div class="row" style="margin-bottom:16px"><a class="btn pri big" style="flex:1" href="#/c/${id}/visit/new">＋ 今日の施術を記録</a><a class="btn big" style="flex:1" href="#/c/${id}/intake/new">📋 問診票を記入</a></div>
+ <div class="card"><h2>問診票</h2>${it?`<div class="sub">最新：${fmt(it.date)}（${it.phase==='pre'?'妊娠中':'産後'}に記入）</div>
+  ${it.data.mainConcern?`<h3>いちばん気になっていること</h3><div style="white-space:pre-wrap">${esc(it.data.mainConcern)}</div>`:''}
+  ${(it.data.symptoms||[]).length?`<h3>症状</h3>${it.data.symptoms.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel!==''?`<span class="sub">　強さ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
+  ${(it.data.goals||[]).length?`<h3>目指したいこと</h3>${it.data.goals.map(x=>`<span class="tag sage">${esc(x)}</span>`).join('')}`:''}
+  <div class="row" style="margin-top:14px">${its.map((x,i)=>`<a class="btn sm" href="#/c/${id}/intake/${x.id}">${i===0?'全文を見る':fmt(x.date)}</a>`).join('')}</div>`:`<p class="sub">まだ問診票がありません。初回来店時に「問診票を記入」からお客様に記入していただきましょう。</p>`}</div>
+ ${painChart(vs)}
+ <div class="card"><h2>施術カルテ（${vs.length}回）</h2>${vs.length?vs.map((v,i)=>`<div class="visit"><a href="#/c/${id}/visit/${v.id}"><div class="row between"><b>${fmt(v.date)}　<span class="sub">第${vs.length-i}回</span></b><span><span class="tag ${statusAt(c,v.date).ph==='post'?'sage':''}">${statusAt(c,v.date).label}</span>${v.painBefore!==''&&v.painAfter!==''?`<span class="sub">痛み ${esc(v.painBefore)} → <b style="color:var(--sage)">${esc(v.painAfter)}</b></span>`:''}</span></div>
+  <div>${(v.menus||[]).map(m=>`<span class="tag gray">${esc(m)}</span>`).join('')}</div>
+  ${v.treatment?`<div style="white-space:pre-wrap;margin-top:4px">${esc(v.treatment.length>140?v.treatment.slice(0,140)+'…':v.treatment)}</div>`:''}
+  ${v.nextNote?`<div class="sub" style="margin-top:4px">📝 次回へ：${esc(v.nextNote)}</div>`:''}</a></div>`).join(''):'<p class="sub">まだ施術の記録がありません。</p>'}</div>`;
+ return{html}}
+
+function viewIntakeStart(id){const c=cust(id);if(!c)return viewMissing();document.body.classList.add('client');
+ const html=`<div class="hero"><p class="sub">${esc(S.settings.shopName||'')}</p><h1>${esc(c.name)} 様<br>問診票のご記入のお願い</h1><p>お体の状態に合わせて安全に施術するため、<br>いくつかの質問にお答えください。（約3分）</p><div class="row" style="justify-content:center;margin-top:30px"><a class="btn pri big" href="#/c/${id}/intake/fill">記入をはじめる</a></div><p style="margin-top:40px"><a href="#/c/${id}" class="sub">← スタッフ画面に戻る</a></p></div>`;return{html}}
+
+function viewIntakeForm(id,iid){const c=cust(id);if(!c)return viewMissing();const ex=iid?S.intakes.find(x=>x.id===iid):null;const client=!ex;if(client)document.body.classList.add('client');else header('home');
+ const d=ex?ex.data:{deliveryType:c.deliveryType||''};const ph=ex?ex.phase:(statusAt(c).ph||'pre');
+ const html=`${client?'':`<a class="back" href="#/c/${id}/intake/${iid}">← 戻る</a>`}<form id="fm" class="phase-${ph}">
+ <div class="card"><h1>${esc(c.name)} 様　問診票</h1><p class="sub">${fmt(ex?ex.date:today())}　分かる範囲でお答えください。</p>
+ ${fieldHTML({k:'_phase',l:'現在の状況',type:'radio',o:['妊娠中','産後']},ph==='post'?'産後':'妊娠中')}</div>
+ ${INTAKE.map(sec=>`<div class="card" ${sec.show?`data-show="${sec.show}"`:''}><div class="sec">${esc(sec.t)}</div>${sec.f.map(f=>fieldHTML(f,d[f.k])).join('')}</div>`).join('')}
+ <div class="card"><div class="sec">同意事項</div><p style="font-size:15px">${esc(CONSENT)}</p>
+  <div class="chips f"><label><input type="checkbox" name="agree" value="1" ${ex&&ex.agree?'checked':''} required><span>上記に同意します</span></label></div>
+  <div class="f"><span class="lb">ご署名<span class="hint">指やApple Pencilでお書きください</span></span><canvas class="sig" id="sig"></canvas><div class="row" style="margin-top:6px"><button class="btn sm" type="button" id="sigclr">書き直す</button></div></div></div>
+ <div class="sticky-save"><button class="btn pri big" type="submit">${client?'送信する':'保存する'}</button></div></form>`;
+ return{html,mount(){const fm=$('#fm');const sp=sigPad($("#sig"),ex&&ex.signature);$("#sigclr").onclick=()=>sp.clear();
+  fm.querySelectorAll('input[name=_phase]').forEach(r=>r.onchange=()=>{fm.className='phase-'+(r.value==='産後'?'post':'pre')});
+  fm.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fm);const phase=fd.get('_phase')==='産後'?'post':'pre';const data={};
+   INTAKE.forEach(sec=>{if(sec.show&&sec.show!==phase)return;sec.f.forEach(f=>data[f.k]=readField(fd,f))});
+   const o=Object.assign({},ex||{id:uid(),customerId:id,date:today(),createdAt:new Date().toISOString()},{phase,data,agree:!!fd.get('agree'),signature:sp.get()});
+   await put('intakes',o);if(phase==='post'&&data.deliveryType&&data.deliveryType!==c.deliveryType){c.deliveryType=data.deliveryType;await put('customers',c)}
+   if(client){window.scrollTo(0,0);$('#app').innerHTML=`<div class="hero"><h1>ご記入ありがとうございました</h1><p>iPadをスタッフにお戻しください。</p><button class="btn big" style="margin-top:30px" id="staff">スタッフ画面へ</button></div>`;$('#staff').onclick=()=>{location.hash='#/c/'+id}}
+   else{toast('保存しました');location.hash=`#/c/${id}/intake/${o.id}`}}}}}
+
+function viewIntake(id,iid){header('home');const c=cust(id),it=S.intakes.find(x=>x.id===iid);if(!c||!it)return viewMissing();
+ const html=`<a class="back" href="#/c/${id}">← ${esc(c.name)} 様</a><div class="card"><div class="row between"><div><h1>問診票</h1><div class="sub">${fmt(it.date)}　${it.phase==='pre'?'妊娠中':'産後'}に記入</div></div><div class="row"><a class="btn sm" href="#/c/${id}/intake/${iid}/edit">編集</a><button class="btn sm danger" id="deli">削除</button></div></div></div>
+ ${INTAKE.filter(s=>!s.show||s.show===it.phase).map(sec=>{const rows=sec.f.map(f=>{const v=valueText(f,it.data[f.k]??'');return v?`<dt>${esc(f.l)}</dt><dd>${esc(v)}</dd>`:''}).join('');return rows?`<div class="card"><div class="sec">${esc(sec.t)}</div><dl class="kv">${rows}</dl></div>`:''}).join('')}
+ <div class="card"><div class="sec">同意・署名</div><p>${it.agree?'✅ 同意済み':'未同意'}</p>${it.signature?`<img src="${it.signature}" style="max-width:100%;height:120px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#fffdfb">`:''}</div>`;
+ return{html,mount(){$('#deli').onclick=async()=>{if(!confirm('この問診票を削除しますか？'))return;await del('intakes',iid);toast('削除しました');location.hash='#/c/'+id}}}}
+
+function viewVisitForm(id,vid){header('home');const c=cust(id);if(!c)return viewMissing();const ex=vid?S.visits.find(x=>x.id===vid):null;if(vid&&!ex)return viewMissing();
+ const prev=visitsOf(id).find(v=>!ex||v.id!==ex.id&&v.date<=ex.date);const v=ex||{date:today(),painBefore:'',painAfter:''};const menus=[...new Set([...(S.settings.menus||[]),...(v.menus||[])])];
+ const html=`<a class="back" href="#/c/${id}">← ${esc(c.name)} 様</a>${alertBox(c)}
+ ${prev&&(prev.nextNote||prev.homecare)?`<div class="card" style="background:var(--sage-l);border-color:#cfe0d3"><b>前回（${fmt(prev.date)}）からの申し送り</b>${prev.nextNote?`<div style="white-space:pre-wrap">📝 ${esc(prev.nextNote)}</div>`:''}${prev.homecare?`<div class="sub">ホームケア：${esc(prev.homecare)}</div>`:''}</div>`:''}
+ <form id="fm"><div class="card"><h1>${ex?'カルテの編集':'施術の記録'}</h1><p class="sub">${esc(c.name)} 様　<span id="st"></span></p>
+  <div class="cols"><label class="f"><span class="lb">施術日</span><input type="date" name="date" value="${esc(v.date)}" required></label>
+  <label class="f"><span class="lb">施術時間（分）</span><input type="number" inputmode="numeric" name="minutes" value="${esc(v.minutes)}"></label>
+  <label class="f"><span class="lb">料金（円）</span><input type="number" inputmode="numeric" name="price" value="${esc(v.price)}"></label></div>
+  ${fieldHTML({k:'condition',l:'本日の体調',type:'radio',o:['とても良い','良い','ふつう','すぐれない']},v.condition)}
+  <label class="f"><span class="lb">体調・お話のメモ</span><textarea name="conditionNote" placeholder="例：夜泣きで寝不足。昨日から右の腰が痛い">${esc(v.conditionNote)}</textarea></label></div>
+ <div class="card"><div class="sec">お悩みと痛み</div>
+  ${fieldHTML({k:'painAreas',l:'本日気になる症状',type:'chips',o:SYMPTOMS},v.painAreas)}
+  ${fieldHTML({k:'painBefore',l:'施術前の痛み',hint:'0〜10',type:'scale'},v.painBefore)}
+  ${fieldHTML({k:'painAfter',l:'施術後の痛み',hint:'0〜10',type:'scale'},v.painAfter)}</div>
+ <div class="card"><div class="sec">施術内容</div>
+  ${fieldHTML({k:'menus',l:'メニュー',hint:'設定で変更できます',type:'chips',o:menus},v.menus)}
+  <label class="f"><span class="lb">施術内容・所見</span><textarea name="treatment" placeholder="例：骨盤の左右差あり（右が高い）。仙腸関節まわりを調整、腹直筋離開は2横指">${esc(v.treatment)}</textarea></label>
+  <label class="f"><span class="lb">施術後の変化・お客様の反応</span><textarea name="response">${esc(v.response)}</textarea></label>
+  <label class="f"><span class="lb">お伝えしたホームケア</span><textarea name="homecare" placeholder="例：寝る前に骨盤底筋トレ 10回">${esc(v.homecare)}</textarea></label></div>
+ <div class="card"><div class="sec">次回について</div>
+  <label class="f"><span class="lb">次回への申し送り<span class="hint">次の記録時に上に表示されます</span></span><textarea name="nextNote">${esc(v.nextNote)}</textarea></label>
+  <label class="f" style="max-width:320px"><span class="lb">次回予約日</span><input type="date" name="nextDate" value="${esc(v.nextDate)}"></label></div>
+ <div class="sticky-save"><button class="btn pri big" type="submit">保存する</button></div>
+ ${ex?'<div style="margin-top:20px"><button class="btn danger" type="button" id="delv">このカルテを削除</button></div>':''}</form>`;
+ return{html,mount(){const fm=$('#fm'),st=()=>{$('#st').textContent='（'+statusAt(c,fm.date.value||today()).label+'）'};fm.date.onchange=st;st();
+  fm.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fm);const o=Object.assign({},ex||{id:uid(),customerId:id,createdAt:new Date().toISOString()});
+   ['date','minutes','price','condition','conditionNote','painBefore','painAfter','treatment','response','homecare','nextNote','nextDate'].forEach(k=>o[k]=(fd.get(k)||'').trim());['painAreas','menus'].forEach(k=>o[k]=fd.getAll(k));
+   await put('visits',o);toast('保存しました');location.hash='#/c/'+id};
+  const d=$('#delv');if(d)d.onclick=async()=>{if(!confirm('このカルテを削除しますか？'))return;await del('visits',vid);toast('削除しました');location.hash='#/c/'+id}}}}
+
+function viewSettings(){header('settings');const lb=S.settings.lastBackup;const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+ const html=`<h1 style="margin-bottom:16px">設定・バックアップ</h1>
+ <div class="card"><h2>💾 バックアップ</h2><p>データはこのiPadの中にだけ保存されています。iPadの故障・紛失や、アプリを削除したときに備えて、<b>週に1回</b>バックアップをiCloud Driveなどに保存してください。</p>
+  <p class="sub">最後のバックアップ：${lb?new Date(lb).toLocaleString('ja-JP'):'まだありません'}　／　お客様 ${S.customers.length}名・問診票 ${S.intakes.length}件・カルテ ${S.visits.length}件</p>
+  <div class="row"><button class="btn pri" data-act="backup">バックアップを保存</button><label class="btn">バックアップから復元<input type="file" id="imp" accept=".json,application/json" style="display:none"></label></div>
+  <p class="sub" style="margin-top:10px">「バックアップを保存」→ 共有メニューの「"ファイル"に保存」→ iCloud Drive を選んでください。</p></div>
+ <div class="card"><h2>📊 表計算ソフト用に書き出す（CSV）</h2><p class="sub">ExcelやNumbers、Googleスプレッドシートで開けます。集計や確定申告の資料づくりに。</p><div class="row"><button class="btn" id="csvc">お客様一覧</button><button class="btn" id="csvv">施術カルテ（売上含む）</button></div></div>
+ <form class="card" id="fm"><h2>お店の設定</h2>
+  <label class="f"><span class="lb">お店の名前<span class="hint">画面上部と問診票に表示</span></span><input type="text" name="shopName" value="${esc(S.settings.shopName)}"></label>
+  <label class="f"><span class="lb">施術メニュー<span class="hint">1行に1つ</span></span><textarea name="menus" style="min-height:200px">${esc((S.settings.menus||[]).join('\n'))}</textarea></label>
+  <button class="btn pri" type="submit">保存する</button></form>
+ <div class="card"><h2>この端末の状態</h2><p class="sub">ホーム画面から起動：${standalone?'✅ はい':'⚠ いいえ（Safariの共有ボタン →「ホーム画面に追加」してから使ってください）'}<br>データの長期保存：${S.persisted?'✅ 有効':'ホーム画面から起動すると安定します'}</p></div>`;
+ return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);S.settings.shopName=fd.get('shopName').trim();S.settings.menus=fd.get('menus').split('\n').map(s=>s.trim()).filter(Boolean);await saveSettings();toast('保存しました');render()};
+  $('#imp').onchange=e=>importBackup(e.target.files[0]);
+  $('#csvc').onclick=()=>csv('お客様一覧',['お名前','ふりがな','年齢','連絡先','出産予定日','出産日','出産経験','出産方法','現在','来店回数','最終来店','メモ'],S.customers.map(c=>{const v=visitsOf(c.id);return[c.name,c.kana,c.age,c.contact,c.dueDate,c.birthDate,c.parity,c.deliveryType,statusAt(c).label,v.length,(v[0]||{}).date,c.memo]}));
+  $('#csvv').onclick=()=>csv('施術カルテ',['施術日','お名前','時期','メニュー','施術時間(分)','料金','体調','体調メモ','症状','痛み(前)','痛み(後)','施術内容・所見','反応','ホームケア','申し送り','次回予約'],S.visits.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(v=>{const c=cust(v.customerId)||{name:'(削除済み)'};return[v.date,c.name,c.id?statusAt(c,v.date).label:'',(v.menus||[]).join('・'),v.minutes,v.price,v.condition,v.conditionNote,(v.painAreas||[]).join('・'),v.painBefore,v.painAfter,v.treatment,v.response,v.homecare,v.nextNote,v.nextDate]}))}}}
+
+function viewMissing(){header('home');return{html:`<div class="empty">データが見つかりませんでした。<br><a href="#/">お客様一覧へ</a></div>`}}
+
+/* ========== バックアップ・書き出し ========== */
+async function saveFile(blob,name){const file=new File([blob],name,{type:blob.type});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file]});return true}catch(e){if(e.name==='AbortError')return false}}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);return true}
+async function exportBackup(){const data={app:'sanzen-karte',version:1,exportedAt:new Date().toISOString(),customers:S.customers,intakes:S.intakes,visits:S.visits,settings:S.settings};
+ const ok=await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),`カルテバックアップ_${today().replace(/-/g,'')}.json`);
+ if(ok){S.settings.lastBackup=new Date().toISOString();await saveSettings();toast('バックアップしました');render()}}
+async function importBackup(file){if(!file)return;try{const d=JSON.parse(await file.text());if(d.app!=='sanzen-karte')throw new Error('形式が違います');
+ if(!confirm(`バックアップ（${new Date(d.exportedAt).toLocaleString('ja-JP')}）から復元します。\nお客様 ${d.customers.length}名・カルテ ${d.visits.length}件\n\n今のiPad内のデータはすべて置き換わります。よろしいですか？`))return;
+ for(const s of['customers','intakes','visits']){await run(s,st=>{st.clear();d[s].forEach(x=>st.put(x))});S[s]=d[s]}
+ S.settings=Object.assign({},d.settings,{id:'settings'});await saveSettings();toast('復元しました');location.hash='#/';render()}catch(e){alert('復元できませんでした：'+e.message)}}
+function csv(name,head,rows){const q=v=>{v=v==null?'':String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ saveFile(new Blob(['﻿'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),`${name}_${today().replace(/-/g,'')}.csv`)}
+
+/* ========== 画面の切り替え ========== */
+function render(){const p=(location.hash.slice(1)||'/').split('/').filter(Boolean);document.body.classList.remove('client');let v;
+ if(!p.length)v=viewHome();
+ else if(p[0]==='settings')v=viewSettings();
+ else if(p[0]==='c'&&p[1]==='new')v=viewCustomerForm();
+ else if(p[0]==='c'&&!p[2])v=viewCustomer(p[1]);
+ else if(p[0]==='c'&&p[2]==='edit')v=viewCustomerForm(p[1]);
+ else if(p[0]==='c'&&p[2]==='visit')v=viewVisitForm(p[1],p[3]==='new'?null:p[3]);
+ else if(p[0]==='c'&&p[2]==='intake'&&p[3]==='new')v=viewIntakeStart(p[1]);
+ else if(p[0]==='c'&&p[2]==='intake'&&p[3]==='fill')v=viewIntakeForm(p[1]);
+ else if(p[0]==='c'&&p[2]==='intake'&&p[4]==='edit')v=viewIntakeForm(p[1],p[3]);
+ else if(p[0]==='c'&&p[2]==='intake')v=viewIntake(p[1],p[3]);
+ else v=viewMissing();
+ $('#app').innerHTML=v.html;window.scrollTo(0,0);if(v.mount)v.mount()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act=backup]');if(b)exportBackup()});
+window.addEventListener('hashchange',render);
+load().then(render).catch(e=>{$('#app').innerHTML=`<div class="alert">データを読み込めませんでした：${esc(e.message)}<br>Safariのプライベートブラウズでは使えません。</div>`});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
