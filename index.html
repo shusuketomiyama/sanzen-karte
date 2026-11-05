@@ -87,6 +87,28 @@ canvas.sig{width:100%;height:180px;border:1px dashed #cdbdb4;border-radius:12px;
 .chart text{font-size:11px;fill:var(--sub)}
 .sticky-save{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:5;display:flex;gap:10px;margin-top:10px}
 .sticky-save .btn{flex:1;box-shadow:0 4px 16px rgba(80,50,40,.12)}
+body.printmode header.top{display:none}
+.pbar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:calc(env(safe-area-inset-top) + 8px) 0 10px;background:var(--bg)}
+.pv{background:#fff;color:#222;max-width:820px;margin:0 auto;padding:32px 36px;font-size:14px;line-height:1.55;border:1px solid var(--line);border-radius:6px}
+.pv .phead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:3px double #c47a6a;padding-bottom:6px;margin-bottom:12px}
+.pv h1{font-size:22px;margin:0;letter-spacing:.2em}.pv .pshop{font-weight:700;color:#a35d4d;min-width:120px}
+.pv table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.pv th,.pv td{border:1px solid #bdb2ac;padding:5px 8px;text-align:left;vertical-align:top;white-space:pre-wrap;font-size:13px}
+.pv th{background:#f6eeea;width:132px;font-weight:600}
+.pv .pvh{background:#ead8d0;width:auto;font-size:14px}
+.pv .pvisit{break-inside:avoid;page-break-inside:avoid;margin-bottom:12px}
+.pv .psec{font-weight:700;font-size:15px;border-bottom:2px solid #c47a6a;margin:14px 0 6px;padding-bottom:2px;break-after:avoid;page-break-after:avoid}
+.pv .ph{font-weight:400;font-size:12px;color:#777}
+.pv .pf{margin:0 0 7px}.pv span.on{font-weight:700;color:#a35d4d}.pv i{font-style:normal;font-size:1.15em}.pv .pconsent{break-inside:avoid;page-break-inside:avoid}.pv .pconsent p{margin:4px 0}.pv .pf:not(:has(.pgrid)){break-inside:avoid;page-break-inside:avoid}.pv .pgrid{break-inside:avoid;page-break-inside:avoid}.pv .pg,.pv .pl{break-after:avoid;page-break-after:avoid}.pv .pl{font-weight:600;font-size:13px}
+.pv .pg{font-size:12px;color:#777;margin-top:4px}
+.pv .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px 10px;font-size:13px}
+.pv .popts{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:13px}
+.pv .pans{border-bottom:1px solid #ccc;padding:2px 4px;white-space:pre-wrap;font-size:13px}
+.pv .pline{border-bottom:1px solid #999;height:24px}.pv .pbox{border:1px solid #999;height:50px;border-radius:3px}
+.pv .pwarn{margin:0;padding-left:20px;color:#9b3a24}
+.pv .psig{margin-top:10px}.pv .psig img{height:70px;vertical-align:middle;border-bottom:1px solid #999}
+.pv .card{border:0;padding:0;margin:0 0 8px}.pv .card h2{font-size:15px}
+@media print{@page{size:A4;margin:12mm}html,body{background:#fff!important;padding:0!important}.pbar,.toast{display:none!important}main{padding:0!important;max-width:none!important}.pv{border:0;padding:0;max-width:none;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
@@ -268,7 +290,7 @@ function painChart(vs){const pts=vs.filter(v=>v.painBefore!==''||v.painAfter!=='
 
 function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissing();const s=statusAt(c),vs=visitsOf(id),its=intakesOf(id),it=its[0];
  const html=`<a class="back" href="#/">← お客様一覧</a>
- <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><a class="btn sm" href="#/c/${id}/edit">編集</a></div>
+ <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><div class="row"><a class="btn sm" href="#/print/karte/${id}">🖨 カルテを出力</a><a class="btn sm" href="#/c/${id}/edit">編集</a></div></div>
  <div style="margin-top:10px"><span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span>${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}${c.dueDate?`<span class="sub">予定日 ${fmt(c.dueDate)}　</span>`:''}${c.birthDate?`<span class="sub">出産日 ${fmt(c.birthDate)}</span>`:''}</div>
  ${c.memo?`<p style="white-space:pre-wrap;margin:10px 0 0">${esc(c.memo)}</p>`:''}</div>
  ${alertBox(c)}
@@ -308,7 +330,7 @@ function viewIntakeForm(id,iid){const c=cust(id);if(!c)return viewMissing();cons
    else{toast('保存しました');location.hash=`#/c/${id}/intake/${o.id}`}}}}}
 
 function viewIntake(id,iid){header('home');const c=cust(id),it=S.intakes.find(x=>x.id===iid);if(!c||!it)return viewMissing();
- const html=`<a class="back" href="#/c/${id}">← ${esc(c.name)} 様</a><div class="card"><div class="row between"><div><h1>問診票</h1><div class="sub">${fmt(it.date)}　${it.phase==='pre'?'妊娠中':'産後'}に記入</div></div><div class="row"><a class="btn sm" href="#/c/${id}/intake/${iid}/edit">編集</a><button class="btn sm danger" id="deli">削除</button></div></div></div>
+ const html=`<a class="back" href="#/c/${id}">← ${esc(c.name)} 様</a><div class="card"><div class="row between"><div><h1>問診票</h1><div class="sub">${fmt(it.date)}　${it.phase==='pre'?'妊娠中':'産後'}に記入</div></div><div class="row"><a class="btn sm" href="#/print/intake/${iid}">🖨 印刷・PDF</a><a class="btn sm" href="#/c/${id}/intake/${iid}/edit">編集</a><button class="btn sm danger" id="deli">削除</button></div></div></div>
  ${INTAKE.filter(s=>!s.show||s.show===it.phase).map(sec=>{const rows=sec.f.map(f=>{const v=valueText(f,it.data[f.k]??'');return v?`<dt>${esc(f.l)}</dt><dd>${esc(v)}</dd>`:''}).join('');return rows?`<div class="card"><div class="sec">${esc(sec.t)}</div><dl class="kv">${rows}</dl></div>`:''}).join('')}
  <div class="card"><div class="sec">同意・署名</div><p>${it.agree?'✅ 同意済み':'未同意'}</p>${it.signature?`<img src="${it.signature}" style="max-width:100%;height:120px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#fffdfb">`:''}</div>`;
  return{html,mount(){$('#deli').onclick=async()=>{if(!confirm('この問診票を削除しますか？'))return;await del('intakes',iid);toast('削除しました');location.hash='#/c/'+id}}}}
@@ -349,6 +371,7 @@ function viewSettings(){header('settings');const lb=S.settings.lastBackup;const 
   <p class="sub">最後のバックアップ：${lb?new Date(lb).toLocaleString('ja-JP'):'まだありません'}　／　お客様 ${S.customers.length}名・問診票 ${S.intakes.length}件・カルテ ${S.visits.length}件</p>
   <div class="row"><button class="btn pri" data-act="backup">バックアップを保存</button><label class="btn">バックアップから復元<input type="file" id="imp" accept=".json,application/json" style="display:none"></label></div>
   <p class="sub" style="margin-top:10px">「バックアップを保存」→ 共有メニューの「"ファイル"に保存」→ iCloud Drive を選んでください。</p></div>
+ <div class="card"><h2>🖨 紙の問診票</h2><p class="sub">iPadで記入できないお客様用に、白紙の問診票（妊娠中・産後の両方の項目入り）を印刷できます。</p><a class="btn" href="#/print/blank">白紙の問診票を出力</a></div>
  <div class="card"><h2>📊 表計算ソフト用に書き出す（CSV）</h2><p class="sub">ExcelやNumbers、Googleスプレッドシートで開けます。集計や確定申告の資料づくりに。</p><div class="row"><button class="btn" id="csvc">お客様一覧</button><button class="btn" id="csvv">施術カルテ（売上含む）</button></div></div>
  <form class="card" id="fm"><h2>お店の設定</h2>
   <label class="f"><span class="lb">お店の名前<span class="hint">画面上部と問診票に表示</span></span><input type="text" name="shopName" value="${esc(S.settings.shopName)}"></label>
@@ -359,6 +382,47 @@ function viewSettings(){header('settings');const lb=S.settings.lastBackup;const 
   $('#imp').onchange=e=>importBackup(e.target.files[0]);
   $('#csvc').onclick=()=>csv('お客様一覧',['お名前','ふりがな','年齢','連絡先','出産予定日','出産日','出産経験','出産方法','現在','来店回数','最終来店','メモ'],S.customers.map(c=>{const v=visitsOf(c.id);return[c.name,c.kana,c.age,c.contact,c.dueDate,c.birthDate,c.parity,c.deliveryType,statusAt(c).label,v.length,(v[0]||{}).date,c.memo]}));
   $('#csvv').onclick=()=>csv('施術カルテ',['施術日','お名前','時期','メニュー','施術時間(分)','料金','体調','体調メモ','症状','痛み(前)','痛み(後)','施術内容・所見','反応','ホームケア','申し送り','次回予約'],S.visits.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(v=>{const c=cust(v.customerId)||{name:'(削除済み)'};return[v.date,c.name,c.id?statusAt(c,v.date).label:'',(v.menus||[]).join('・'),v.minutes,v.price,v.condition,v.conditionNote,(v.painAreas||[]).join('・'),v.painBefore,v.painAfter,v.treatment,v.response,v.homecare,v.nextNote,v.nextDate]}))}}}
+
+/* ========== 印刷・PDF出力 ========== */
+const mark=on=>on?'☑':'☐';
+const item=(on,o)=>`<span class="${on?'on':''}"><i>${mark(on)}</i> ${esc(o)}</span>`;
+function intakeDoc(c,it){const blank=!it,d=it?it.data:{},shop=S.settings.shopName||'';
+ const secs=INTAKE.filter(s=>blank||!s.show||s.show===it.phase);
+ const opts=(list,on)=>`<div class="popts">${list.map(o=>item(on(o),o)).join('')}</div>`;
+ const fld=f=>{const v=d[f.k];let b;
+  if(f.type==='checks')b=f.o.map(g=>`<div class="pg">${esc(g.g)}</div><div class="pgrid">${g.items.map(o=>item((v||[]).includes(o),o)).join('')}</div>`).join('');
+  else if(f.type==='chips')b=opts(f.o,o=>(v||[]).includes(o));
+  else if(f.type==='radio')b=opts(f.o,o=>v===o);
+  else if(f.type==='scale')b=opts([0,1,2,3,4,5,6,7,8,9,10].map(String),o=>String(v)===o);
+  else if(f.type==='text')b=blank?'<div class="pline"></div>':`<div class="pans">${esc(v)||'—'}</div>`;
+  else b=blank?'<div class="pbox"></div>':`<div class="pans">${esc(v)||'—'}</div>`;
+  return`<div class="pf"><div class="pl">${esc(f.l)}${f.hint?`<span class="ph">（${esc(f.hint)}）</span>`:''}</div>${b}</div>`};
+ const head=blank?`<table><tr><th>記入日</th><td>　　　年　　月　　日</td><th>年齢</th><td>　　　歳</td></tr><tr><th>お名前</th><td colspan="3"></td></tr><tr><th>現在の状況</th><td colspan="3">☐ 妊娠中（出産予定日　　　年　　月　　日）　☐ 産後（出産日　　　年　　月　　日）</td></tr><tr><th>出産経験</th><td colspan="3">☐ 初めて　☐ 2人目　☐ 3人目以上</td></tr></table>`
+  :`<table><tr><th>記入日</th><td>${fmt(it.date)}</td><th>年齢</th><td>${c.age?esc(c.age)+'歳':''}</td></tr><tr><th>お名前</th><td colspan="3">${esc(c.name)}${c.kana?`（${esc(c.kana)}）`:''} 様</td></tr><tr><th>現在の状況</th><td colspan="3">${it.phase==='pre'?'妊娠中':'産後'}　${statusAt(c,it.date).label}${c.dueDate?`　予定日 ${fmt(c.dueDate)}`:''}${c.birthDate?`　出産日 ${fmt(c.birthDate)}`:''}</td></tr><tr><th>出産経験</th><td colspan="3">${esc(c.parity||'')}</td></tr></table>`;
+ return`<div class="phead"><div class="pshop">${esc(shop)}</div><h1>問診票</h1></div>${head}
+ ${secs.map(s=>`<div class="psec">${esc(s.t)}${blank&&s.show?(s.show==='pre'?'<span class="ph">（妊娠中の方のみ）</span>':'<span class="ph">（産後の方のみ）</span>'):''}</div>${s.f.map(fld).join('')}`).join('')}
+ <div class="pconsent"><div class="psec">同意事項</div><p>${esc(CONSENT)}</p><p>${item(!!(it&&it.agree),'上記に同意します')}</p>
+ <div class="psig">ご署名：${it&&it.signature?`<img src="${it.signature}">`:'<span class="pline" style="display:inline-block;width:60%"></span>'}</div></div>`}
+function karteDoc(c){const vs=visitsOf(c.id).slice().reverse(),it=intakesOf(c.id)[0],fl=flagsOf(c),shop=S.settings.shopName||'';
+ const r=(l,v)=>v||v===0?`<tr><th>${l}</th><td colspan="3">${esc(v)}</td></tr>`:'';
+ const d=it?it.data:{};
+ return`<div class="phead"><div class="pshop">${esc(shop)}</div><h1>施術カルテ</h1><div class="ph">出力日 ${fmt(today())}</div></div>
+ <table><tr><th>お名前</th><td>${esc(c.name)}${c.kana?`（${esc(c.kana)}）`:''} 様</td><th>年齢</th><td>${c.age?esc(c.age)+'歳':''}</td></tr>
+ <tr><th>出産予定日</th><td>${fmt(c.dueDate)}</td><th>出産日</th><td>${fmt(c.birthDate)}</td></tr>
+ <tr><th>現在</th><td>${statusAt(c).label}</td><th>出産経験・方法</th><td>${esc([c.parity,c.deliveryType].filter(Boolean).join(' / '))}</td></tr>
+ ${r('連絡先',c.contact)}${r('メモ',c.memo)}</table>
+ ${fl.length?`<div class="psec">⚠ 施術時の注意</div><ul class="pwarn">${fl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+ ${it?`<div class="psec">問診票の要点<span class="ph">（${fmt(it.date)} 記入）</span></div><table>${r('いちばんのお悩み',d.mainConcern)}${r('お悩み項目',concernsOf(d).join('、'))}${r('つらさ',d.painLevel!==''&&d.painLevel!=null?d.painLevel+' / 10':'')}${r('目指したいこと',(d.goals||[]).join('、'))}${r('好みの強さ',d.pressure)}${r('持病・既往歴',d.history)}${r('服薬',d.meds)}${r('アレルギー',d.allergy)}</table>`:''}
+ ${painChart(visitsOf(c.id))}
+ <div class="psec">施術記録（${vs.length}回）</div>
+ ${vs.length?vs.map((v,i)=>`<table class="pvisit"><tr><th colspan="4" class="pvh">第${i+1}回　${fmt(v.date)}　${statusAt(c,v.date).label}${v.minutes?`　${esc(v.minutes)}分`:''}${v.price?`　${yen(v.price)}`:''}</th></tr>
+  ${r('体調',[v.condition,v.conditionNote].filter(Boolean).join('　'))}${r('症状',(v.painAreas||[]).join('、'))}${r('痛み',v.painBefore!==''||v.painAfter!==''?`施術前 ${v.painBefore||'-'} → 施術後 ${v.painAfter||'-'}`:'')}${r('メニュー',(v.menus||[]).join('、'))}${r('施術内容・所見',v.treatment)}${r('反応・変化',v.response)}${r('ホームケア',v.homecare)}${r('申し送り',v.nextNote)}${r('次回予約',fmt(v.nextDate))}</table>`).join(''):'<p>記録はまだありません。</p>'}`}
+function viewPrint(kind,a){let doc,back,title;
+ if(kind==='blank'){doc=intakeDoc(null,null);back='#/settings';title='問診票（白紙）'}
+ else if(kind==='karte'){const c=cust(a);if(!c)return viewMissing();doc=karteDoc(c);back='#/c/'+a;title=`カルテ_${c.name}`}
+ else{const it=S.intakes.find(x=>x.id===a),c=it&&cust(it.customerId);if(!c)return viewMissing();doc=intakeDoc(c,it);back=`#/c/${c.id}/intake/${a}`;title=`問診票_${c.name}`}
+ document.body.classList.add('printmode');document.title=title+'_'+today().replace(/-/g,'');
+ return{html:`<div class="pbar"><a class="btn" href="${back}">← 戻る</a><span class="sub">PDFにするには、プリント画面の共有ボタン →「"ファイル"に保存」</span><button class="btn pri" onclick="window.print()">🖨 印刷・PDF保存</button></div><div class="pv">${doc}</div>`}}
 
 function viewMissing(){header('home');return{html:`<div class="empty">データが見つかりませんでした。<br><a href="#/">お客様一覧へ</a></div>`}}
 
@@ -377,9 +441,10 @@ function csv(name,head,rows){const q=v=>{v=v==null?'':String(v);return/[",\n]/.t
  saveFile(new Blob(['﻿'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),`${name}_${today().replace(/-/g,'')}.csv`)}
 
 /* ========== 画面の切り替え ========== */
-function render(){const p=(location.hash.slice(1)||'/').split('/').filter(Boolean);document.body.classList.remove('client');let v;
+function render(){const p=(location.hash.slice(1)||'/').split('/').filter(Boolean);document.body.classList.remove('client','printmode');document.title=S.settings.shopName||'産前産後カルテ';let v;
  if(!p.length)v=viewHome();
  else if(p[0]==='settings')v=viewSettings();
+ else if(p[0]==='print')v=viewPrint(p[1],p[2]);
  else if(p[0]==='c'&&p[1]==='new')v=viewCustomerForm();
  else if(p[0]==='c'&&!p[2])v=viewCustomer(p[1]);
  else if(p[0]==='c'&&p[2]==='edit')v=viewCustomerForm(p[1]);
