@@ -1,6 +1,6 @@
 // オフラインでも開けるように、アプリ本体をiPadに保存しておく
 // アプリを更新したら VERSION の数字を上げる
-const VERSION = 'v7';
+const VERSION = 'v8';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,7 +17,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-cache' })  // 毎回サーバーに最新版を確認する
       .then(res => {
         const copy = res.clone();
         caches.open(VERSION).then(c => c.put(e.request, copy));
