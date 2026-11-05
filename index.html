@@ -62,6 +62,17 @@ input:focus,textarea:focus,select:focus{outline:3px solid var(--pri-l);border-co
 .ccard{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
 .ccard:active{background:#fdf9f7}
 .ccard .nm{font-size:19px;font-weight:700}
+.ccard{padding:0;overflow:hidden}.ccard .cmain{display:block;padding:16px 18px 10px;text-decoration:none;color:inherit}.ccard .cmain:active{background:#fdf6f3}
+.ccard .crec{display:block;border-top:1px solid var(--line);padding:9px 18px;font-size:14px;font-weight:600;text-decoration:none}
+.thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto}.thumbs img{height:90px;border-radius:8px;border:1px solid var(--line)}
+.knum{font-size:15px;background:var(--pri);color:#fff;border-radius:999px;padding:3px 12px;vertical-align:middle;margin-left:10px;font-weight:600}
+.kwarn{margin-top:10px;background:var(--warn-l);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:14px}
+.kprev{margin-top:8px;font-size:14px;color:var(--sub)}
+.padd{position:relative;display:flex;align-items:center;justify-content:center;height:58px;border:2px dashed #dcc8be;border-radius:12px;color:var(--pri-d);font-weight:600;background:#fffaf7;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.padd:active{background:var(--pri-l)}.padd input{position:absolute;width:1px;height:1px;opacity:0}
+.photo{position:relative;margin-bottom:10px}.photo img{display:block;width:100%;height:auto;max-height:80vh;object-fit:contain;background:#f1e9e4;border-radius:12px}
+.photo button{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92)}
+.bignote{min-height:340px}
 .alert{background:var(--warn-l);border:1px solid #efc9bd;border-radius:var(--r);padding:14px 18px;margin-bottom:16px;color:#7d3322}
 .alert b{color:var(--warn)}
 .alert ul{margin:6px 0 0;padding-left:20px}
@@ -107,7 +118,7 @@ body.printmode header.top{display:none}
 .pv .pline{border-bottom:1px solid #999;height:24px}.pv .pbox{border:1px solid #999;height:50px;border-radius:3px}
 .pv .pwarn{margin:0;padding-left:20px;color:#9b3a24}
 .pv .psig{margin-top:10px}.pv .psig img{height:70px;vertical-align:middle;border-bottom:1px solid #999}
-.pv .card{border:0;padding:0;margin:0 0 8px}.pv .card h2{font-size:15px}
+.pv div.pvisit{border:1px solid #bdb2ac;margin-bottom:10px}.pv div.pvh{padding:5px 8px;background:#ead8d0;font-weight:700}.pv .pphotos{display:flex;gap:8px;flex-wrap:wrap;padding:8px}.pv .pphotos img{max-height:80mm;max-width:48%;object-fit:contain}.pv .pnote{padding:6px 8px;white-space:pre-wrap;font-size:13px}.pv .card{border:0;padding:0;margin:0 0 8px}.pv .card h2{font-size:15px}
 @media print{@page{size:A4;margin:12mm}html,body{background:#fff!important;padding:0!important}.pbar,.toast{display:none!important}main{padding:0!important;max-width:none!important}.pv{border:0;padding:0;max-width:none;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
@@ -253,17 +264,22 @@ function header(active){const name=S.settings.shopName||'産前産後カルテ';
 function backupNotice(){if(!S.customers.length)return'';const lb=S.settings.lastBackup;const days=lb?Math.floor((Date.now()-new Date(lb))/86400000):null;
  if(lb&&days<7)return'';return`<div class="notice row between"><div>💾 ${lb?`最後のバックアップから${days}日たっています。`:'まだバックアップがありません。'}<br><span class="sub">データはこのiPadの中だけにあります。週に1回はiCloud Driveなどに保存しましょう。</span></div><button class="btn sm" data-act="backup">今すぐバックアップ</button></div>`}
 
+const noteOf=v=>v.note!=null?v.note:[v.conditionNote,v.treatment,v.response,v.homecare,v.nextNote].filter(Boolean).join('\n');
+const trunc=(s,n)=>s.length>n?s.slice(0,n)+'…':s;
+const statusTag=(c,at)=>{const s=statusAt(c,at);return`<span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span>`};
+function resizeImage(file,max=1400,q=.8){return new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);
+ img.onload=()=>{const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*s);cv.height=Math.round(img.naturalHeight*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',q))};
+ img.onerror=()=>rej(new Error('画像を読み込めませんでした'));img.src=url})}
+
 function viewHome(){header('home');const t=today(),ym=t.slice(0,7);
- const mv=S.visits.filter(v=>v.date.startsWith(ym));const sales=mv.reduce((s,v)=>s+(Number(v.price)||0),0);
- const next=S.customers.map(c=>{const v=visitsOf(c.id)[0];return v&&v.nextDate&&v.nextDate>=t?{c,d:v.nextDate}:null}).filter(Boolean).sort((a,b)=>a.d.localeCompare(b.d));
  const html=`${backupNotice()}
- <div class="stats"><div class="stat"><div class="v">${S.customers.length}<small style="font-size:14px">名</small></div><div class="k">お客様</div></div><div class="stat"><div class="v">${mv.length}<small style="font-size:14px">回</small></div><div class="k">今月の施術</div></div><div class="stat"><div class="v">${yen(sales)||'¥0'}</div><div class="k">今月の売上</div></div></div>
- ${next.length?`<div class="card"><h2>次回のご予約</h2>${next.map(x=>`<div class="row between visit"><a href="#/c/${x.c.id}"><b>${esc(x.c.name)}</b> 様</a><span>${x.d===t?'<span class="tag">今日</span>':''}${fmt(x.d)}</span></div>`).join('')}</div>`:''}
- <div class="row between" style="margin:8px 0 12px"><h1>お客様一覧</h1><a class="btn pri" href="#/c/new">＋ 新しいお客様</a></div>
+ <div class="stats"><div class="stat"><div class="v">${S.customers.length}<small style="font-size:14px">名</small></div><div class="k">お客様</div></div><div class="stat"><div class="v">${S.visits.filter(v=>v.date===t).length}<small style="font-size:14px">件</small></div><div class="k">今日のカルテ</div></div><div class="stat"><div class="v">${S.visits.filter(v=>v.date.startsWith(ym)).length}<small style="font-size:14px">回</small></div><div class="k">今月の来店</div></div></div>
+ <a class="btn pri big wide" href="#/new" style="margin-bottom:22px">📋 新しいお客様（問診票を記入）</a>
+ <h1>お客様リスト</h1><p class="sub" style="margin:0 0 10px">来店されたお客様をタップすると、今日のカルテが開きます</p>
  <input type="search" id="q" placeholder="お名前・ふりがなで検索" style="margin-bottom:14px">
  <div id="list" class="grid2"></div>`;
  return{html,mount(){const draw=()=>{const q=$('#q').value.trim();const list=S.customers.filter(c=>!q||(c.name+(c.kana||'')).includes(q)).map(c=>({c,v:visitsOf(c.id)})).sort((a,b)=>((b.v[0]||{}).date||b.c.createdAt||'').localeCompare((a.v[0]||{}).date||a.c.createdAt||''));
-  $('#list').innerHTML=list.length?list.map(({c,v})=>{const s=statusAt(c),fl=flagsOf(c).length;return`<a class="ccard" href="#/c/${c.id}"><div class="row between"><span class="nm">${esc(c.name)} <small style="font-weight:400;font-size:14px">様</small></span>${fl?'<span class="tag warn">⚠ 注意 '+fl+'</span>':''}</div><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}</div><div style="margin-top:6px"><span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span><span class="tag gray">来店 ${v.length}回</span>${v[0]?`<span class="sub">最終 ${fmt(v[0].date)}</span>`:''}</div></a>`}).join(''):`<div class="empty" style="grid-column:1/-1">${q?'見つかりませんでした':'まだお客様が登録されていません。<br>「＋ 新しいお客様」から登録しましょう。'}</div>`};
+  $('#list').innerHTML=list.length?list.map(({c,v})=>{const fl=flagsOf(c).length,done=v[0]&&v[0].date===t;return`<div class="ccard"><a class="cmain" href="#/c/${c.id}/today"><div class="row between"><span class="nm">${esc(c.name)} <small style="font-weight:400;font-size:14px">様</small></span>${done?'<span class="tag sage">✓ 今日記入済み</span>':fl?'<span class="tag warn">⚠ 注意 '+fl+'</span>':''}</div><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}</div><div style="margin-top:6px">${statusTag(c)}<span class="tag gray">来店 ${v.length}回</span>${v[0]?`<span class="sub">最終 ${fmt(v[0].date)}</span>`:''}</div></a><a class="crec" href="#/c/${c.id}">これまでの記録・問診票 ›</a></div>`}).join(''):`<div class="empty" style="grid-column:1/-1">${q?'見つかりませんでした':'まだお客様がいません。<br>初めてのお客様には「📋 新しいお客様（問診票を記入）」から問診票を書いていただくと、ここに追加されます。'}</div>`};
   $('#q').addEventListener('input',draw);draw()}}}
 
 function viewCustomerForm(id){header('home');const c=id?cust(id):{};if(id&&!c)return viewMissing();
@@ -278,55 +294,55 @@ function viewCustomerForm(id){header('home');const c=id?cust(id):{};if(id&&!c)re
  </div>
  ${fieldHTML({k:'parity',l:'出産経験',type:'radio',o:['初めて','2人目','3人目以上']},c.parity)}
  ${fieldHTML({k:'deliveryType',l:'出産方法',hint:'ご出産後の方',type:'radio',o:['経膣分娩','無痛分娩','吸引・鉗子分娩','帝王切開']},c.deliveryType)}
- <label class="f"><span class="lb">メモ</span><textarea name="memo" placeholder="お子さんの名前、来店時の様子など">${esc(c.memo)}</textarea></label>
+ <label class="f"><span class="lb">メモ</span><textarea name="memo" placeholder="お子さんの名前など">${esc(c.memo)}</textarea></label>
  <div class="row between"><button class="btn pri big" type="submit">保存する</button>${id?'<button class="btn danger" type="button" id="delc">このお客様を削除</button>':''}</div>
  </form></div>`;
  return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const o=Object.assign({},c,{id:c.id||uid(),createdAt:c.createdAt||new Date().toISOString()});['name','kana','age','contact','dueDate','birthDate','parity','deliveryType','memo'].forEach(k=>o[k]=(fd.get(k)||'').trim());await put('customers',o);toast('保存しました');location.hash='#/c/'+o.id};
   const d=$('#delc');if(d)d.onclick=async()=>{if(!confirm(`${c.name} 様のデータ（問診票・カルテを含む）をすべて削除します。元に戻せません。よろしいですか？`))return;for(const v of visitsOf(id))await del('visits',v.id);for(const v of intakesOf(id))await del('intakes',v.id);await del('customers',id);toast('削除しました');location.hash='#/'}}}}
 
-function painChart(vs){const pts=vs.filter(v=>v.painBefore!==''||v.painAfter!=='').slice().reverse();if(pts.length<2)return'';const W=640,H=150,L=28,R=10,T=10,B=24,n=pts.length,x=i=>L+(W-L-R)*i/(n-1),y=v=>T+(H-T-B)*(1-v/10);
- const line=(k,col,dash)=>{const p=pts.map((v,i)=>v[k]===''||v[k]==null?null:[x(i),y(+v[k])]).filter(Boolean);return p.length?`<polyline fill="none" stroke="${col}" stroke-width="2.5" ${dash?'stroke-dasharray="5 4"':''} points="${p.map(q=>q.join(',')).join(' ')}"/>${p.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${col}"/>`).join('')}`:''};
- return`<div class="card"><div class="row between"><h2 style="margin:0">痛みの変化</h2><span class="sub"><span style="color:var(--pri)">━</span> 施術前　<span style="color:var(--sage)">┅</span> 施術後</span></div><svg class="chart" viewBox="0 0 ${W} ${H}" width="100%">${[0,5,10].map(g=>`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="#eee4de"/><text x="4" y="${y(g)+4}">${g}</text>`).join('')}${pts.map((v,i)=>i===0||i===n-1||n<=8?`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${v.date.slice(5).replace('-','/')}</text>`:'').join('')}${line('painBefore','#c47a6a')}${line('painAfter','#6f9179',1)}</svg></div>`}
-
-function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissing();const s=statusAt(c),vs=visitsOf(id),its=intakesOf(id),it=its[0];
- const html=`<a class="back" href="#/">← お客様一覧</a>
+function viewCustomer(id){header('home');const c=cust(id);if(!c)return viewMissing();const vs=visitsOf(id),its=intakesOf(id),it=its[0];
+ const html=`<a class="back" href="#/">← お客様リスト</a>
  <div class="card"><div class="row between"><div><h1>${esc(c.name)} 様</h1><div class="sub">${esc(c.kana||'')}${c.age?'　'+esc(c.age)+'歳':''}${c.contact?'　📱 '+esc(c.contact):''}</div></div><div class="row"><a class="btn sm" href="#/print/karte/${id}">🖨 カルテを出力</a><a class="btn sm" href="#/c/${id}/edit">編集</a></div></div>
- <div style="margin-top:10px"><span class="tag ${s.ph==='post'?'sage':s.ph?'':'gray'}">${s.label}</span>${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}${c.dueDate?`<span class="sub">予定日 ${fmt(c.dueDate)}　</span>`:''}${c.birthDate?`<span class="sub">出産日 ${fmt(c.birthDate)}</span>`:''}</div>
+ <div style="margin-top:10px">${statusTag(c)}${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}${c.dueDate?`<span class="sub">予定日 ${fmt(c.dueDate)}　</span>`:''}${c.birthDate?`<span class="sub">出産日 ${fmt(c.birthDate)}</span>`:''}</div>
  ${c.memo?`<p style="white-space:pre-wrap;margin:10px 0 0">${esc(c.memo)}</p>`:''}</div>
  ${alertBox(c)}
- <div class="row" style="margin-bottom:16px"><a class="btn pri big" style="flex:1" href="#/c/${id}/visit/new">＋ 今日の施術を記録</a><a class="btn big" style="flex:1" href="#/c/${id}/intake/new">📋 問診票を記入</a></div>
+ <div class="row" style="margin-bottom:16px"><a class="btn pri big" style="flex:2" href="#/c/${id}/today">📝 今日のカルテを書く</a><a class="btn big" style="flex:1" href="#/c/${id}/intake/new">📋 問診票を記入</a></div>
+ <div class="card"><h2>カルテ（${vs.length}回）</h2>${vs.length?vs.map((v,i)=>{const n=noteOf(v),ph=v.photos||[];return`<div class="visit"><a href="#/c/${id}/visit/${v.id}"><div class="row between"><b>${fmt(v.date)}　<span class="sub">第${vs.length-i}回</span></b>${statusTag(c,v.date)}</div>${ph.length?`<div class="thumbs">${ph.map(p=>`<img src="${p}" alt="">`).join('')}</div>`:''}${n?`<div style="white-space:pre-wrap;margin-top:4px">${esc(trunc(n,160))}</div>`:''}</a></div>`}).join(''):'<p class="sub">まだカルテがありません。</p>'}</div>
  <div class="card"><h2>問診票</h2>${it?`<div class="sub">最新：${fmt(it.date)}（${it.phase==='pre'?'妊娠中':'産後'}に記入）</div>
   ${it.data.mainConcern?`<h3>いちばん気になっていること</h3><div style="white-space:pre-wrap">${esc(it.data.mainConcern)}</div>`:''}
-  ${concernsOf(it.data).length?`<h3>お悩み（${concernsOf(it.data).length}項目）</h3>${concernsOf(it.data).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel!==''?`<span class="sub">　強さ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
+  ${concernsOf(it.data).length?`<h3>お悩み（${concernsOf(it.data).length}項目）</h3>${concernsOf(it.data).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}${it.data.painLevel?`<span class="sub">　つらさ ${esc(it.data.painLevel)}/10</span>`:''}`:''}
   ${(it.data.goals||[]).length?`<h3>目指したいこと</h3>${it.data.goals.map(x=>`<span class="tag sage">${esc(x)}</span>`).join('')}`:''}
-  <div class="row" style="margin-top:14px">${its.map((x,i)=>`<a class="btn sm" href="#/c/${id}/intake/${x.id}">${i===0?'全文を見る':fmt(x.date)}</a>`).join('')}</div>`:`<p class="sub">まだ問診票がありません。初回来店時に「問診票を記入」からお客様に記入していただきましょう。</p>`}</div>
- ${painChart(vs)}
- <div class="card"><h2>施術カルテ（${vs.length}回）</h2>${vs.length?vs.map((v,i)=>`<div class="visit"><a href="#/c/${id}/visit/${v.id}"><div class="row between"><b>${fmt(v.date)}　<span class="sub">第${vs.length-i}回</span></b><span><span class="tag ${statusAt(c,v.date).ph==='post'?'sage':''}">${statusAt(c,v.date).label}</span>${v.painBefore!==''&&v.painAfter!==''?`<span class="sub">痛み ${esc(v.painBefore)} → <b style="color:var(--sage)">${esc(v.painAfter)}</b></span>`:''}</span></div>
-  <div>${(v.menus||[]).map(m=>`<span class="tag gray">${esc(m)}</span>`).join('')}</div>
-  ${v.treatment?`<div style="white-space:pre-wrap;margin-top:4px">${esc(v.treatment.length>140?v.treatment.slice(0,140)+'…':v.treatment)}</div>`:''}
-  ${v.nextNote?`<div class="sub" style="margin-top:4px">📝 次回へ：${esc(v.nextNote)}</div>`:''}</a></div>`).join(''):'<p class="sub">まだ施術の記録がありません。</p>'}</div>`;
+  <div class="row" style="margin-top:14px">${its.map((x,i)=>`<a class="btn sm" href="#/c/${id}/intake/${x.id}">${i===0?'全文を見る':fmt(x.date)}</a>`).join('')}</div>`:`<p class="sub">まだ問診票がありません。</p>`}</div>`;
  return{html}}
 
-function viewIntakeStart(id){const c=cust(id);if(!c)return viewMissing();document.body.classList.add('client');
- const html=`<div class="hero"><p class="sub">${esc(S.settings.shopName||'')}</p><h1>${esc(c.name)} 様<br>問診票のご記入のお願い</h1><p>お体の状態に合わせて安全に施術するため、<br>いくつかの質問にお答えください。（約3分）</p><div class="row" style="justify-content:center;margin-top:30px"><a class="btn pri big" href="#/c/${id}/intake/fill">記入をはじめる</a></div><p style="margin-top:40px"><a href="#/c/${id}" class="sub">← スタッフ画面に戻る</a></p></div>`;return{html}}
+function viewIntakeStart(id){const c=id?cust(id):null;if(id&&!c)return viewMissing();document.body.classList.add('client');
+ const html=`<div class="hero"><p class="sub">${esc(S.settings.shopName||'')}</p><h1>${c?esc(c.name)+' 様':'ようこそ'}<br>問診票のご記入のお願い</h1><p>お体の状態に合わせて安全に施術するため、<br>いくつかの質問にお答えください。（約3分）</p><div class="row" style="justify-content:center;margin-top:30px"><a class="btn pri big" href="${c?`#/c/${id}/intake/fill`:'#/new/fill'}">記入をはじめる</a></div><p style="margin-top:40px"><a href="${c?'#/c/'+id:'#/'}" class="sub">← スタッフ画面に戻る</a></p></div>`;return{html}}
 
-function viewIntakeForm(id,iid){const c=cust(id);if(!c)return viewMissing();const ex=iid?S.intakes.find(x=>x.id===iid):null;const client=!ex;if(client)document.body.classList.add('client');else header('home');
- const d=ex?ex.data:{deliveryType:c.deliveryType||''};const ph=ex?ex.phase:(statusAt(c).ph||'pre');
+function viewIntakeForm(id,iid){const c=id?cust(id):null;if(id&&!c)return viewMissing();const ex=iid?S.intakes.find(x=>x.id===iid):null;const client=!ex;if(client)document.body.classList.add('client');else header('home');
+ const d=ex?ex.data:{deliveryType:c&&c.deliveryType||''};const ph=ex?ex.phase:c?(statusAt(c).ph||'pre'):'pre';
+ const basics=c?`<h1>${esc(c.name)} 様　問診票</h1><p class="sub">${fmt(ex?ex.date:today())}　分かる範囲でお答えください。</p>${fieldHTML({k:'_phase',l:'現在の状況',type:'radio',o:['妊娠中','産後']},ph==='post'?'産後':'妊娠中')}`
+  :`<h1>問診票</h1><p class="sub">${fmt(today())}　分かる範囲でお答えください。住所などは不要です。</p>
+   <div class="cols"><label class="f"><span class="lb">お名前 *</span><input type="text" name="name" required autocomplete="off"></label>
+   <label class="f"><span class="lb">ふりがな</span><input type="text" name="kana" autocomplete="off"></label>
+   <label class="f"><span class="lb">年齢</span><input type="number" inputmode="numeric" name="age" min="10" max="70"></label></div>
+   ${fieldHTML({k:'_phase',l:'現在の状況',type:'radio',o:['妊娠中','産後']},'妊娠中')}
+   <div class="cols"><label class="f" data-show="pre"><span class="lb">出産予定日</span><input type="date" name="dueDate"></label><label class="f" data-show="post"><span class="lb">出産日</span><input type="date" name="birthDate"></label></div>
+   ${fieldHTML({k:'parity',l:'出産経験',hint:'今回のご出産が',type:'radio',o:['初めて','2人目','3人目以上']},'')}`;
  const html=`${client?'':`<a class="back" href="#/c/${id}/intake/${iid}">← 戻る</a>`}<form id="fm" class="phase-${ph}">
- <div class="card"><h1>${esc(c.name)} 様　問診票</h1><p class="sub">${fmt(ex?ex.date:today())}　分かる範囲でお答えください。</p>
- ${fieldHTML({k:'_phase',l:'現在の状況',type:'radio',o:['妊娠中','産後']},ph==='post'?'産後':'妊娠中')}</div>
+ <div class="card">${basics}</div>
  ${INTAKE.map(sec=>`<div class="card" ${sec.show?`data-show="${sec.show}"`:''}><div class="sec">${esc(sec.t)}</div>${sec.f.map(f=>fieldHTML(f,d[f.k])).join('')}</div>`).join('')}
  <div class="card"><div class="sec">同意事項</div><p style="font-size:15px">${esc(CONSENT)}</p>
   <div class="chips f"><label><input type="checkbox" name="agree" value="1" ${ex&&ex.agree?'checked':''} required><span>上記に同意します</span></label></div>
   <div class="f"><span class="lb">ご署名<span class="hint">指やApple Pencilでお書きください</span></span><canvas class="sig" id="sig"></canvas><div class="row" style="margin-top:6px"><button class="btn sm" type="button" id="sigclr">書き直す</button></div></div></div>
  <div class="sticky-save"><button class="btn pri big" type="submit">${client?'送信する':'保存する'}</button></div></form>`;
- return{html,mount(){const fm=$('#fm');const sp=sigPad($("#sig"),ex&&ex.signature);$("#sigclr").onclick=()=>sp.clear();
+ return{html,mount(){const fm=$('#fm');const sp=sigPad($('#sig'),ex&&ex.signature);$('#sigclr').onclick=()=>sp.clear();
   fm.querySelectorAll('input[name=_phase]').forEach(r=>r.onchange=()=>{fm.className='phase-'+(r.value==='産後'?'post':'pre')});
   fm.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fm);const phase=fd.get('_phase')==='産後'?'post':'pre';const data={};
    INTAKE.forEach(sec=>{if(sec.show&&sec.show!==phase)return;sec.f.forEach(f=>data[f.k]=readField(fd,f))});
-   const o=Object.assign({},ex||{id:uid(),customerId:id,date:today(),createdAt:new Date().toISOString()},{phase,data,agree:!!fd.get('agree'),signature:sp.get()});
-   await put('intakes',o);if(phase==='post'&&data.deliveryType&&data.deliveryType!==c.deliveryType){c.deliveryType=data.deliveryType;await put('customers',c)}
-   if(client){window.scrollTo(0,0);$('#app').innerHTML=`<div class="hero"><h1>ご記入ありがとうございました</h1><p>iPadをスタッフにお戻しください。</p><button class="btn big" style="margin-top:30px" id="staff">スタッフ画面へ</button></div>`;$('#staff').onclick=()=>{location.hash='#/c/'+id}}
+   let cc=c;if(!cc){const g=k=>(fd.get(k)||'').trim();cc={id:uid(),createdAt:new Date().toISOString(),name:g('name'),kana:g('kana'),age:g('age'),dueDate:phase==='pre'?g('dueDate'):'',birthDate:phase==='post'?g('birthDate'):'',parity:g('parity'),deliveryType:'',contact:'',memo:''};await put('customers',cc)}
+   const o=Object.assign({},ex||{id:uid(),customerId:cc.id,date:today(),createdAt:new Date().toISOString()},{phase,data,agree:!!fd.get('agree'),signature:sp.get()});
+   await put('intakes',o);if(phase==='post'&&data.deliveryType&&data.deliveryType!==cc.deliveryType){cc.deliveryType=data.deliveryType;await put('customers',cc)}
+   if(client){window.scrollTo(0,0);$('#app').innerHTML=`<div class="hero"><h1>ご記入ありがとうございました</h1><p>iPadをスタッフにお戻しください。</p><button class="btn big" style="margin-top:30px" id="staff">スタッフ画面へ</button></div>`;$('#staff').onclick=()=>{location.hash=c?'#/c/'+c.id:'#/'}}
    else{toast('保存しました');location.hash=`#/c/${id}/intake/${o.id}`}}}}}
 
 function viewIntake(id,iid){header('home');const c=cust(id),it=S.intakes.find(x=>x.id===iid);if(!c||!it)return viewMissing();
@@ -336,32 +352,25 @@ function viewIntake(id,iid){header('home');const c=cust(id),it=S.intakes.find(x=
  return{html,mount(){$('#deli').onclick=async()=>{if(!confirm('この問診票を削除しますか？'))return;await del('intakes',iid);toast('削除しました');location.hash='#/c/'+id}}}}
 
 function viewVisitForm(id,vid){header('home');const c=cust(id);if(!c)return viewMissing();const ex=vid?S.visits.find(x=>x.id===vid):null;if(vid&&!ex)return viewMissing();
- const prev=visitsOf(id).find(v=>!ex||v.id!==ex.id&&v.date<=ex.date);const v=ex||{date:today(),painBefore:'',painAfter:''};const menus=[...new Set([...(S.settings.menus||[]),...(v.menus||[])])];
- const html=`<a class="back" href="#/c/${id}">← ${esc(c.name)} 様</a>${alertBox(c)}
- ${prev&&(prev.nextNote||prev.homecare)?`<div class="card" style="background:var(--sage-l);border-color:#cfe0d3"><b>前回（${fmt(prev.date)}）からの申し送り</b>${prev.nextNote?`<div style="white-space:pre-wrap">📝 ${esc(prev.nextNote)}</div>`:''}${prev.homecare?`<div class="sub">ホームケア：${esc(prev.homecare)}</div>`:''}</div>`:''}
- <form id="fm"><div class="card"><h1>${ex?'カルテの編集':'施術の記録'}</h1><p class="sub">${esc(c.name)} 様　<span id="st"></span></p>
-  <div class="cols"><label class="f"><span class="lb">施術日</span><input type="date" name="date" value="${esc(v.date)}" required></label>
-  <label class="f"><span class="lb">施術時間（分）</span><input type="number" inputmode="numeric" name="minutes" value="${esc(v.minutes)}"></label>
-  <label class="f"><span class="lb">料金（円）</span><input type="number" inputmode="numeric" name="price" value="${esc(v.price)}"></label></div>
-  ${fieldHTML({k:'condition',l:'本日の体調',type:'radio',o:['とても良い','良い','ふつう','すぐれない']},v.condition)}
-  <label class="f"><span class="lb">体調・お話のメモ</span><textarea name="conditionNote" placeholder="例：夜泣きで寝不足。昨日から右の腰が痛い">${esc(v.conditionNote)}</textarea></label></div>
- <div class="card"><div class="sec">お悩みと痛み</div>
-  ${fieldHTML({k:'painAreas',l:'本日気になる症状',type:'chips',o:SYMPTOMS},v.painAreas)}
-  ${fieldHTML({k:'painBefore',l:'施術前の痛み',hint:'0〜10',type:'scale'},v.painBefore)}
-  ${fieldHTML({k:'painAfter',l:'施術後の痛み',hint:'0〜10',type:'scale'},v.painAfter)}</div>
- <div class="card"><div class="sec">施術内容</div>
-  ${fieldHTML({k:'menus',l:'メニュー',hint:'設定で変更できます',type:'chips',o:menus},v.menus)}
-  <label class="f"><span class="lb">施術内容・所見</span><textarea name="treatment" placeholder="例：骨盤の左右差あり（右が高い）。仙腸関節まわりを調整、腹直筋離開は2横指">${esc(v.treatment)}</textarea></label>
-  <label class="f"><span class="lb">施術後の変化・お客様の反応</span><textarea name="response">${esc(v.response)}</textarea></label>
-  <label class="f"><span class="lb">お伝えしたホームケア</span><textarea name="homecare" placeholder="例：寝る前に骨盤底筋トレ 10回">${esc(v.homecare)}</textarea></label></div>
- <div class="card"><div class="sec">次回について</div>
-  <label class="f"><span class="lb">次回への申し送り<span class="hint">次の記録時に上に表示されます</span></span><textarea name="nextNote">${esc(v.nextNote)}</textarea></label>
-  <label class="f" style="max-width:320px"><span class="lb">次回予約日</span><input type="date" name="nextDate" value="${esc(v.nextDate)}"></label></div>
+ const v=ex||{date:today()};const photos=[...(v.photos||[])];const fl=flagsOf(c);
+ const num=d=>visitsOf(id).filter(x=>x.id!==v.id&&(x.date<d||(x.date===d&&(!ex||(x.createdAt||'')<(ex.createdAt||''))))).length+1;
+ const prev=visitsOf(id).find(x=>x.id!==v.id&&x.date<=v.date&&noteOf(x));
+ const html=`<a class="back" href="#/">← お客様リスト</a><form id="fm">
+ <div class="card"><div class="row between" style="align-items:flex-start"><div><div class="sub">カルテ</div><h1>${esc(c.name)} 様<span class="knum" id="num">第${num(v.date)}回</span></h1></div><input type="date" name="date" value="${esc(v.date)}" required style="max-width:210px"></div>
+  <div style="margin-top:6px"><span id="st">${statusTag(c,v.date)}</span>${c.age?`<span class="tag gray">${esc(c.age)}歳</span>`:''}${c.parity?`<span class="tag gray">${esc(c.parity)}</span>`:''}${c.deliveryType?`<span class="tag gray">${esc(c.deliveryType)}</span>`:''}<a class="sub" href="#/c/${id}" style="margin-left:6px">これまでの記録・問診票 ›</a></div>
+  ${fl.length?`<div class="kwarn">⚠ ${fl.map(esc).join('　／　')}</div>`:''}
+  ${prev?`<div class="kprev"><b>前回（${fmt(prev.date)}）</b>　${esc(trunc(noteOf(prev).replace(/\n/g,' '),90))}</div>`:''}</div>
+ <div class="card"><div class="sec">姿勢の写真</div><div id="photos"></div>
+  <label class="padd"><input type="file" accept="image/*" capture="environment" id="cam"><span id="camlb">📷 タップして撮影</span></label></div>
+ <div class="card"><div class="sec">メモ</div><textarea name="note" class="bignote" placeholder="施術内容、お体の状態、お話したことなどを自由に">${esc(noteOf(v))}</textarea></div>
  <div class="sticky-save"><button class="btn pri big" type="submit">保存する</button></div>
  ${ex?'<div style="margin-top:20px"><button class="btn danger" type="button" id="delv">このカルテを削除</button></div>':''}</form>`;
- return{html,mount(){const fm=$('#fm'),st=()=>{$('#st').textContent='（'+statusAt(c,fm.date.value||today()).label+'）'};fm.date.onchange=st;st();
-  fm.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fm);const o=Object.assign({},ex||{id:uid(),customerId:id,createdAt:new Date().toISOString()});
-   ['date','minutes','price','condition','conditionNote','painBefore','painAfter','treatment','response','homecare','nextNote','nextDate'].forEach(k=>o[k]=(fd.get(k)||'').trim());['painAreas','menus'].forEach(k=>o[k]=fd.getAll(k));
+ return{html,mount(){const fm=$('#fm');
+  const draw=()=>{$('#photos').innerHTML=photos.map((p,i)=>`<div class="photo"><img src="${p}" alt="姿勢の写真${i+1}"><button type="button" class="btn sm danger" data-del="${i}">✕ 削除</button></div>`).join('');$('#camlb').textContent=photos.length?'📷 もう1枚撮影':'📷 タップして撮影'};draw();
+  $('#photos').onclick=e=>{const b=e.target.closest('[data-del]');if(b&&confirm('この写真を削除しますか？')){photos.splice(+b.dataset.del,1);draw()}};
+  $('#cam').onchange=async e=>{for(const f of e.target.files){try{photos.push(await resizeImage(f))}catch(err){alert(err.message)}}e.target.value='';draw()};
+  fm.date.onchange=()=>{const d=fm.date.value||today();$('#num').textContent=`第${num(d)}回`;$('#st').innerHTML=statusTag(c,d)};
+  fm.onsubmit=async e=>{e.preventDefault();const o=Object.assign({},ex||{id:uid(),customerId:id,createdAt:new Date().toISOString()},{date:fm.date.value||today(),photos,note:fm.note.value.trim()});
    await put('visits',o);toast('保存しました');location.hash='#/c/'+id};
   const d=$('#delv');if(d)d.onclick=async()=>{if(!confirm('このカルテを削除しますか？'))return;await del('visits',vid);toast('削除しました');location.hash='#/c/'+id}}}}
 
@@ -372,16 +381,15 @@ function viewSettings(){header('settings');const lb=S.settings.lastBackup;const 
   <div class="row"><button class="btn pri" data-act="backup">バックアップを保存</button><label class="btn">バックアップから復元<input type="file" id="imp" accept=".json,application/json" style="display:none"></label></div>
   <p class="sub" style="margin-top:10px">「バックアップを保存」→ 共有メニューの「"ファイル"に保存」→ iCloud Drive を選んでください。</p></div>
  <div class="card"><h2>🖨 紙の問診票</h2><p class="sub">iPadで記入できないお客様用に、白紙の問診票（妊娠中・産後の両方の項目入り）を印刷できます。</p><a class="btn" href="#/print/blank">白紙の問診票を出力</a></div>
- <div class="card"><h2>📊 表計算ソフト用に書き出す（CSV）</h2><p class="sub">ExcelやNumbers、Googleスプレッドシートで開けます。集計や確定申告の資料づくりに。</p><div class="row"><button class="btn" id="csvc">お客様一覧</button><button class="btn" id="csvv">施術カルテ（売上含む）</button></div></div>
+ <div class="card"><h2>📊 表計算ソフト用に書き出す（CSV）</h2><p class="sub">ExcelやNumbers、Googleスプレッドシートで開けます。</p><div class="row"><button class="btn" id="csvc">お客様一覧</button><button class="btn" id="csvv">カルテ一覧</button></div></div>
  <form class="card" id="fm"><h2>お店の設定</h2>
   <label class="f"><span class="lb">お店の名前<span class="hint">画面上部と問診票に表示</span></span><input type="text" name="shopName" value="${esc(S.settings.shopName)}"></label>
-  <label class="f"><span class="lb">施術メニュー<span class="hint">1行に1つ</span></span><textarea name="menus" style="min-height:200px">${esc((S.settings.menus||[]).join('\n'))}</textarea></label>
   <button class="btn pri" type="submit">保存する</button></form>
  <div class="card"><h2>この端末の状態</h2><p class="sub">ホーム画面から起動：${standalone?'✅ はい':'⚠ いいえ（Safariの共有ボタン →「ホーム画面に追加」してから使ってください）'}<br>データの長期保存：${S.persisted?'✅ 有効':'ホーム画面から起動すると安定します'}</p></div>`;
- return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);S.settings.shopName=fd.get('shopName').trim();S.settings.menus=fd.get('menus').split('\n').map(s=>s.trim()).filter(Boolean);await saveSettings();toast('保存しました');render()};
+ return{html,mount(){$('#fm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);S.settings.shopName=fd.get('shopName').trim();await saveSettings();toast('保存しました');render()};
   $('#imp').onchange=e=>importBackup(e.target.files[0]);
   $('#csvc').onclick=()=>csv('お客様一覧',['お名前','ふりがな','年齢','連絡先','出産予定日','出産日','出産経験','出産方法','現在','来店回数','最終来店','メモ'],S.customers.map(c=>{const v=visitsOf(c.id);return[c.name,c.kana,c.age,c.contact,c.dueDate,c.birthDate,c.parity,c.deliveryType,statusAt(c).label,v.length,(v[0]||{}).date,c.memo]}));
-  $('#csvv').onclick=()=>csv('施術カルテ',['施術日','お名前','時期','メニュー','施術時間(分)','料金','体調','体調メモ','症状','痛み(前)','痛み(後)','施術内容・所見','反応','ホームケア','申し送り','次回予約'],S.visits.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(v=>{const c=cust(v.customerId)||{name:'(削除済み)'};return[v.date,c.name,c.id?statusAt(c,v.date).label:'',(v.menus||[]).join('・'),v.minutes,v.price,v.condition,v.conditionNote,(v.painAreas||[]).join('・'),v.painBefore,v.painAfter,v.treatment,v.response,v.homecare,v.nextNote,v.nextDate]}))}}}
+  $('#csvv').onclick=()=>{const cnt={};csv('カルテ一覧',['日付','お名前','回数','時期','写真の枚数','メモ'],S.visits.slice().sort((a,b)=>a.date.localeCompare(b.date)||(a.createdAt||'').localeCompare(b.createdAt||'')).map(v=>{const c=cust(v.customerId)||{name:'(削除済み)'};cnt[v.customerId]=(cnt[v.customerId]||0)+1;return[v.date,c.name,cnt[v.customerId],c.id?statusAt(c,v.date).label:'',(v.photos||[]).length,noteOf(v)]}))}}}}
 
 /* ========== 印刷・PDF出力 ========== */
 const mark=on=>on?'☑':'☐';
@@ -412,11 +420,9 @@ function karteDoc(c){const vs=visitsOf(c.id).slice().reverse(),it=intakesOf(c.id
  <tr><th>現在</th><td>${statusAt(c).label}</td><th>出産経験・方法</th><td>${esc([c.parity,c.deliveryType].filter(Boolean).join(' / '))}</td></tr>
  ${r('連絡先',c.contact)}${r('メモ',c.memo)}</table>
  ${fl.length?`<div class="psec">⚠ 施術時の注意</div><ul class="pwarn">${fl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
- ${it?`<div class="psec">問診票の要点<span class="ph">（${fmt(it.date)} 記入）</span></div><table>${r('いちばんのお悩み',d.mainConcern)}${r('お悩み項目',concernsOf(d).join('、'))}${r('つらさ',d.painLevel!==''&&d.painLevel!=null?d.painLevel+' / 10':'')}${r('目指したいこと',(d.goals||[]).join('、'))}${r('好みの強さ',d.pressure)}${r('持病・既往歴',d.history)}${r('服薬',d.meds)}${r('アレルギー',d.allergy)}</table>`:''}
- ${painChart(visitsOf(c.id))}
- <div class="psec">施術記録（${vs.length}回）</div>
- ${vs.length?vs.map((v,i)=>`<table class="pvisit"><tr><th colspan="4" class="pvh">第${i+1}回　${fmt(v.date)}　${statusAt(c,v.date).label}${v.minutes?`　${esc(v.minutes)}分`:''}${v.price?`　${yen(v.price)}`:''}</th></tr>
-  ${r('体調',[v.condition,v.conditionNote].filter(Boolean).join('　'))}${r('症状',(v.painAreas||[]).join('、'))}${r('痛み',v.painBefore!==''||v.painAfter!==''?`施術前 ${v.painBefore||'-'} → 施術後 ${v.painAfter||'-'}`:'')}${r('メニュー',(v.menus||[]).join('、'))}${r('施術内容・所見',v.treatment)}${r('反応・変化',v.response)}${r('ホームケア',v.homecare)}${r('申し送り',v.nextNote)}${r('次回予約',fmt(v.nextDate))}</table>`).join(''):'<p>記録はまだありません。</p>'}`}
+ ${it?`<div class="psec">問診票の要点<span class="ph">（${fmt(it.date)} 記入）</span></div><table>${r('いちばんのお悩み',d.mainConcern)}${r('お悩み項目',concernsOf(d).join('、'))}${r('つらさ',d.painLevel?d.painLevel+' / 10':'')}${r('目指したいこと',(d.goals||[]).join('、'))}${r('持病・既往歴',d.history)}${r('アレルギー',d.allergy)}</table>`:''}
+ <div class="psec">カルテ（${vs.length}回）</div>
+ ${vs.length?vs.map((v,i)=>`<div class="pvisit"><div class="pvh">第${i+1}回　${fmt(v.date)}　${statusAt(c,v.date).label}</div>${(v.photos||[]).length?`<div class="pphotos">${v.photos.map(p=>`<img src="${p}">`).join('')}</div>`:''}<div class="pnote">${esc(noteOf(v))||'—'}</div></div>`).join(''):'<p>記録はまだありません。</p>'}`}
 function viewPrint(kind,a){let doc,back,title;
  if(kind==='blank'){doc=intakeDoc(null,null);back='#/settings';title='問診票（白紙）'}
  else if(kind==='karte'){const c=cust(a);if(!c)return viewMissing();doc=karteDoc(c);back='#/c/'+a;title=`カルテ_${c.name}`}
@@ -443,6 +449,8 @@ function csv(name,head,rows){const q=v=>{v=v==null?'':String(v);return/[",\n]/.t
 /* ========== 画面の切り替え ========== */
 function render(){const p=(location.hash.slice(1)||'/').split('/').filter(Boolean);document.body.classList.remove('client','printmode');document.title=S.settings.shopName||'産前産後カルテ';let v;
  if(!p.length)v=viewHome();
+ else if(p[0]==='new')v=p[1]==='fill'?viewIntakeForm(null):viewIntakeStart(null);
+ else if(p[0]==='c'&&p[2]==='today'){const tv=visitsOf(p[1]).find(x=>x.date===today());v=viewVisitForm(p[1],tv?tv.id:null)}
  else if(p[0]==='settings')v=viewSettings();
  else if(p[0]==='print')v=viewPrint(p[1],p[2]);
  else if(p[0]==='c'&&p[1]==='new')v=viewCustomerForm();
